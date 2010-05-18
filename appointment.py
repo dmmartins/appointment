@@ -13,7 +13,11 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-import translation
+# Use Django translation
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+from django.conf import settings
+settings._target = None
+from django.utils import translation
 
 # Add custom Django template filters/tags
 template.register_template_library('templatetags')
@@ -51,7 +55,7 @@ class BaseRequestHandler(webapp.RequestHandler):
 
         values.update(template_values)
         directory = os.path.dirname(__file__)
-        path = os.path.join(directory, 'templates', template_name)
+        path = os.path.join(directory, 'template', template_name)
         self.response.out.write(template.render(path, values, debug=_DEBUG))
 
     @property

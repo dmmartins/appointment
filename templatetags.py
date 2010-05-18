@@ -11,11 +11,8 @@ def date_format(date, format=None):
         return date
     return date.strftime(format)
 
-def trans(text):
-    return translation.gettext(text)
 
 # Register the filter/templatetags functions
 register = template.create_template_register()
 register.filter(date_format)
-register.simple_tag(trans)
 
