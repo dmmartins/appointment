@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block jquery %}
+<script type="text/javascript">
+    var selectedDate = '{{ appointment.date_list.0|date_format:settings.DATETIME_FORMAT }}';
+    var selectedEmail = '{{ user }}';
+
+    function getAvailability() {
+        key = '{{ appointment.key }}';
+        user = '{{ user }}';
+        date_ = selectedDate;
+        email = selectedEmail;
+        query = 'email=' + email + '&user=' + user + '&date=' + escape(date_) + '&key=' + key;
+        url = '/availability?' + query;
+        $('#availability').load(url, function() {
+            $(this).removeClass();
+            $(this).addClass($('#status').attr('class'));
+            $('#status-form').buttonset();
+            $('#status-form').change(function() {
+                $.post('/availability', $('#status-form').serialize());
+            });
+        });
+    }
+
+    $(document).ready(function() {
+        getAvailability();
+
+        $('.dates').click(function() {
+            selectedDate = $(this).html();
+            $('body').find('.dates').removeClass('selected');
+            $(this).addClass('selected');
+            getAvailability();
+        });
+        
+        $('.people').click(function() {
+            selectedEmail = $(this).html();
+            $('body').find('.people').removeClass('selected');
+            $(this).addClass('selected');
+            getAvailability();
+        });
+
+        $('.dates, .people').hover(function() {
+            $(this).addClass('hover');
+        }, function() {
+            $(this).removeClass('hover');
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<h2>{{ appointment.description }}</h2>
+<div id="appointment">
+    <table>
+        <thead>
+            <tr>
+                <th>{% trans "Proposed dates" %}</th>
+                <th>{% trans "Availability" %}</th>
+                <th>{% trans "Participants" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="dates">
+                    {% for date_ in appointment.date_list %}
+                    <div class="dates{% if forloop.first %} selected{% endif %}">{{ date_|date_format:settings.DATETIME_FORMAT }}</div>
+                    {% endfor %}
+                </td>
+                <td id="availability">
+                </td>
+                <td id="people">
+                    <div class="people{% ifequal user appointment.email %} selected{% endifequal %}">{{ appointment.email }}</div>
+                    {% for email in appointment.invitee_list %}
+                    <div class="people{% ifequal user email %} selected{% endifequal %}">{{ email }}</div>
+                    {% endfor %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

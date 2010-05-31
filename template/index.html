@@ -2,6 +2,41 @@
 
 {% load i18n %}
 
+{% block jquery %}
+<script type="text/javascript">
+    var dateOptions = {
+        dateFormat: 'yy-mm-dd',
+    }
+
+    var timeOptions = {
+        spinnerImage: '/static/img/spinnerOrange.png',
+        show24Hours: true,
+    }
+
+    var lastHour;
+
+    function refreshDatepicker() {
+        $('body').find('input.date').removeClass('hasDatepicker').datepicker(dateOptions);
+        $('.timeEntry_control').remove();
+        $('body').find('input.time').removeClass('hasTimeEntry');
+        $('.timeEntry_wrap').replaceWith(function() {
+                return $(this).children();
+            });
+        $('input.time').timeEntry(timeOptions);
+        $('input.time').focus();
+    }
+        
+    $(document).ready(function() {
+        $('input.date').datepicker(dateOptions);
+        $('input.time').timeEntry(timeOptions);
+        $('#date-list').dynamicForm('#plus', '#minus', {
+            limit: 5,
+            afterClone: refreshDatepicker
+        });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div id="appointment">
     <h2>Appointment</h2>
@@ -13,11 +48,17 @@
             </p>
             <p>
                 <label for="invitees">{% trans "Invitees" %}:</label>
-                <input type="text" name="invitees" value="{{ appointment.invitee }}" />
+                <input type="text" name="invitees" value="{{ appointment.invitees }}" />
             </p>
+            <p>{% trans "Proposed dates" %}:</p>
             <p>
-                <label for="dates">{% trans "Proposed dates" %}:</label>
-                <input id="dates" type="text" name="dates" value="{{ appointment.dates }}" />
+                <div class="date-list" id="date-list">
+                    <label class="date" for="date">{% trans "Date" %}:</label>
+                    <input class="date" type="text" name="date[]" />
+                    <label class="time" style="float: none" for="time">{% trans "Time" %}:</label>
+                    <input class="time" type="text" name="time[]" />
+                    <a id="minus" href="">[-]</a><a id="plus" href="">[+]</a>
+                </div>
             </p>
             <p>
                 <label for="name">{% trans "Your name" %}:</label>

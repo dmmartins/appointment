@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 from google.appengine.ext.webapp import template
-import translation
 
 def date_format(date, format=None):
     if not date:

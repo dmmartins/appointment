@@ -1,0 +1,80 @@
+body {
+    font-family: Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+/* TimeEntry styles */
+.timeEntry_control {
+	vertical-align: middle;
+	margin-left: 2px;
+}
+
+
+.ui-widget {
+    font-size: 11px;
+}
+
+#appointment table {
+    width: 50%;
+}
+
+#appointment table th {
+    background: #888;
+    color: white;
+}
+
+#appointment table td {
+    text-align: center;
+}
+
+#dates {
+    width: 35%;
+}
+
+#availability {
+    width: 30%;
+}
+
+#people {
+    width: 35%;
+}
+
+#title a {
+    text-decoration: none;
+    color: #333;
+}
+
+#footer {
+    margin-top: 35px;
+}
+
+.dates, .people {
+    cursor: pointer;
+}
+
+.hover {
+    background: #fee;
+}
+
+.maybe {
+    background: #ff7;
+}
+
+.no {
+    background: #f77;
+}
+
+.yes {
+    background: #0f7;
+}
+
+.selected {
+    background: #7bf;
+}
+
+.app-form label {
+    width: 100px;
+    float: left;
+}
+
+

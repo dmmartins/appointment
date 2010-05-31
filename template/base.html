@@ -6,32 +6,36 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>{% block title %}Appointmens{% endblock %}</title>
+    <title>{% block title %}{{ settings.app_config.title }}{% endblock %}</title>
     
     {% block style %}
+    <link rel="stylesheet" type="text/css" href="/static/css/ui-lightness/jquery-ui-1.8.1.custom.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+    <link rel="stylesheet" media="screen" type="text/css" href="/static/css/jquery.timepickr.css" />
     {% endblock %}
 
     {% block head %}{% endblock %}
+
+    {% block javascript %}
+    <script src="/static/js/jquery-1.4.2.min.js"></script>
+    <script src="/static/js/jquery-ui-1.8.1.custom.min.js"></script>
+    <script src="/static/js/jquery-dynamic-form.js"></script>
+    <script src="/static/js/jquery.timeentry.js"></script>
+    {% endblock %}
+
+    {% block jquery %}{% endblock %}
 </head>
 <body>
     <div id="header">
-        <h1>{{ settings.TITLE }}</h1>
-        <div id="menu">
-            <ul>
-                {% if current_user %}
-                <li>{{ current_user }}</li>
-                <li><a href="{{ logout_url }}">{% trans Logout %}</a></li>
-                {% endif %}
-                <li><a href="/help">{% trans "Help" %}</a></li>
-            </ul>
+        <div id="title">
+            <h1><a href="/">{{ settings.app_config.title }}</a></h1>
         </div>
     </div>
     <div id="content">
         {% block content %}{% endblock %}
     </div>
     <div id="footer">
-        <p>&copy;2010 {{ settings.TITLE }}</p>
+        <p>&copy; 2010 {{ settings.app_config.title }}</p>
     </div>
 </body>
 

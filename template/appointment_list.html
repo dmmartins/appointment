@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+    <div id="appointments">
+    {% if appointments %}
+        {% for appointment in appointments %}
+        <table>
+            <thead>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Proposed dates" %}</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="/appointment?key={{ appointment.key }}">{{ appointment.name }}</a>
+                    </td>
+                
+                    <td>{{ appointment.dates }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% endfor %}
+    {% else %}
+        <p>{% trans "No appointments." %}
+    {% endif %}
+    </div>
+{% endblock content %}
+

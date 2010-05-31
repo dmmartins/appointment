@@ -1,0 +1,12 @@
+<html>
+    <body>
+        <p>Dear {{ invitee }},</p>
+
+        <p>You have been invited by {{ appointment.name }} to tell when you’re available for the following appointment:</p>
+
+        <a href="http://{{ request.host }}/appointment?key={{ appointment.key }}&user={{ invitee }}">{{ appointment.description }}</a>
+        
+        <p>Click the above link for an overview and to indicate your availability.</p>
+    </body>
+</html>
+
