@@ -4,5 +4,5 @@ DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 
 app_config = {
     'title': 'Appointments',
-    'email': 'diego@euromec.com.br',
+    'email': 'alex421@gmail.com',
 }

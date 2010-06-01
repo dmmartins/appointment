@@ -4,7 +4,7 @@
 
         <p>Your email address has been verified. Go to the overview to see which invitees have entered their availability or modify the appointment:</p>
 
-        <a href="http://{{ request.host }}/aapointment?key={{ appointment.key }}&user={{ appointment.email }}">{{ appointment.description }}</a>
+        <a href="http://{{ request.host }}/appointment?key={{ appointment.key }}&user={{ appointment.email }}">{{ appointment.description }}</a>
 
         <p>We have assumed that you are available on all proposed dates. You can use the above link to change your own availability or add comments.</p>
     </body>

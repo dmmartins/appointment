@@ -39,14 +39,6 @@ class Appointment(db.Model):
     name = db.StringProperty(required=True)
     email = db.EmailProperty(required=True)
 
-    @property
-    def dates(self):
-        return ', '.join([datetime.datetime.strftime(d, '%Y-%m-%d') for d in self.date_list])
-
-    @property
-    def invitees(self):
-        return ', '.join(self.invitee_list)
-
 
 class Invite(db.Model):
     ''' Contact invited to an appointment. '''
@@ -92,7 +84,8 @@ class HomeHandler(BaseRequestHandler):
         invitee_list = [db.Email(i.strip()) for i in invitees.split(',')]
         dates = self.request.get_all('date[]')
         times = self.request.get_all('time[]')
-        date_list = [datetime.datetime.strptime(d, settings.DATE_FORMAT) for d in dates]
+        datetimes = map(lambda d, t: '%s %s' % (d, t), dates, times)
+        date_list = [datetime.datetime.strptime(d, settings.DATETIME_FORMAT) for d in datetimes]
         name = self.request.get('name')
         email = self.request.get('email')
 
@@ -138,7 +131,8 @@ class HomeHandler(BaseRequestHandler):
                     )
                 i.put()
 
-        self.redirect('/appointment?key=%s&user=%s' % (appointment.key(), appointment.email))
+        #self.redirect('/appointment?key=%s&user=%s' % (appointment.key(), appointment.email))
+        self.generate('created.html')
 
 
 class AppointmentHandler(BaseRequestHandler):
