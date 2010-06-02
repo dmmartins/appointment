@@ -27,8 +27,19 @@
 </head>
 <body>
     <div id="header">
+        <div id="menu">
+            <ul>
+                {% if user %}
+                <li>{{ user }}</li>
+                <li><a href="/new">{% trans "New appointment" %}</a></li>
+                <li><a href="{{ logout_url }}">{% trans "Logout" %}</a></li>
+                {% else %}
+                <li><a href="{{ login_url }}">{% trans "Login" %}</a></li>
+                {% endif %}
+            </ul>
+        </div>
         <div id="title">
-            <h1><a href="/">{{ settings.app_config.title }}</a></h1>
+            <a href="/">{{ settings.app_config.title }}</a>
         </div>
     </div>
     <div id="content">

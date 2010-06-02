@@ -8,15 +8,16 @@
         {% for appointment in appointments %}
         <table>
             <thead>
+                <th>{% trans "Description" %}</th>
                 <th>{% trans "Name" %}</th>
                 <th>{% trans "Proposed dates" %}</th>
             </thead>
             <tbody>
                 <tr>
                     <td>
-                        <a href="/appointment?key={{ appointment.key }}">{{ appointment.name }}</a>
+                        <a href="/appointment?key={{ appointment.key }}">{{ appointment.description }}</a>
                     </td>
-                
+                    <td>{{ appointment.name }}</td>
                     <td>{{ appointment.dates }}</td>
                 </tr>
             </tbody>
