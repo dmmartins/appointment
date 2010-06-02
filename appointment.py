@@ -132,8 +132,8 @@ class NewAppointmentHandler(BaseRequestHandler):
         times = self.request.get_all('time[]')
         datetimes = map(lambda d, t: '%s %s' % (d, t), dates, times)
         date_list = [datetime.datetime.strptime(d, settings.DATETIME_FORMAT) for d in datetimes]
-        name = self.request.get('name')
-        email = self.request.get('email')
+        name = self.current_user.nickname()
+        email = self.current_user.email()
 
         # Save appointment
         appointment = Appointment(

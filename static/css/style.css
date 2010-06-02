@@ -1,6 +1,7 @@
 body {
     font-family: Helvetica, sans-serif;
     font-size: 12px;
+    background: url('/static/img/clouds.png') fixed;
 }
 
 a {
@@ -17,6 +18,14 @@ a {
 /* jqueryui font size */
 .ui-widget {
     font-size: 11px;
+}
+
+#header {
+    margin:auto;
+    width: 750px;
+    background: #fff;
+    padding: 15px;
+    box-radius: 1em;
 }
 
 #title {
@@ -46,16 +55,23 @@ a {
 }
 
 #content {
-    margin: 25px;
-    max-width: 800px;
+    margin: auto;
+    margin-top: 15px;
+    width: 750px;
+    background: #fff;
+    padding: 15px;
 }
 
 #footer {
-    margin: 25px;
+    margin: auto;
+    margin-top: 15px;
+    width: 750px;
+    background: #fff;
+    padding: 15px;
 }
 
 #appointment table {
-    width: 50%;
+    width: 80%;
 }
 
 #appointment table th {
@@ -82,10 +98,6 @@ a {
 #title a {
     text-decoration: none;
     color: #333;
-}
-
-#footer {
-    margin-top: 35px;
 }
 
 .dates, .people {
