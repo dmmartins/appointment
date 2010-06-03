@@ -2,7 +2,7 @@
     <body>
         <p>Dear {{ appointment.name }}</p>
 
-        <p>Your email address has been verified. Go to the overview to see which invitees have entered their availability or modify the appointment:</p>
+        <p>The appointment has been successsfully created. Go to the overview to see which invitees have entered their availability or modify the appointment:</p>
 
         <a href="http://{{ request.host }}/appointment?key={{ appointment.key }}&user={{ appointment.email }}">{{ appointment.description }}</a>
 

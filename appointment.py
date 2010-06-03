@@ -203,7 +203,7 @@ class AppointmentHandler(BaseRequestHandler):
         if not appointment:
             return self.error(404)
         invitees = Invite.all().filter('appointment =', appointment)
-        self.generate('appointment.html', {'appointment': appointment, 'invitees': invitees, 'user': user})
+        self.generate('appointment.html', {'appointment': appointment, 'invitees': invitees, 'email': user})
 
 
 class AppointmentsHandler(BaseRequestHandler):

@@ -5,11 +5,11 @@
 {% block jquery %}
 <script type="text/javascript">
     var selectedDate = '{{ appointment.date_list.0|date_format:settings.DATETIME_FORMAT }}';
-    var selectedEmail = '{{ user }}';
+    var selectedEmail = '{{ email }}';
 
     function getAvailability() {
         key = '{{ appointment.key }}';
-        user = '{{ user }}';
+        user = '{{ email }}';
         date_ = selectedDate;
         email = selectedEmail;
         query = 'email=' + email + '&user=' + user + '&date=' + escape(date_) + '&key=' + key;
@@ -71,9 +71,9 @@
                 <td id="availability">
                 </td>
                 <td id="people">
-                    <div class="people{% ifequal user appointment.email %} selected{% endifequal %}">{{ appointment.email }}</div>
-                    {% for email in appointment.invitee_list %}
-                    <div class="people{% ifequal user email %} selected{% endifequal %}">{{ email }}</div>
+                    <div class="people{% ifequal email appointment.email %} selected{% endifequal %}">{{ appointment.email }}</div>
+                    {% for invitee in appointment.invitee_list %}
+                    <div class="people{% ifequal email invitee %} selected{% endifequal %}">{{ invitee }}</div>
                     {% endfor %}
                 </td>
             </tr>
