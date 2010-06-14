@@ -10,11 +10,13 @@ import functools
 # GAE imports
 from google.appengine.api import users
 from google.appengine.api import mail
+from google.appengine.api import images
 from google.appengine.ext import webapp
 from google.appengine.ext import db
+from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
-from django.utils import simplejson
 
 # Use Django translation
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -53,6 +55,13 @@ class Invite(db.Model):
     appointment = db.ReferenceProperty(Appointment)
 
 
+class Photo(db.Model):
+    ''' User photo.  '''
+    user = db.UserProperty(required=True)
+    blob_info = blobstore.BlobReferenceProperty(required=True)
+    comment = db.StringProperty(required=False)
+
+
 # Login required decorator
 def login_required(method, admin=False):
     @functools.wraps(method)
@@ -69,9 +78,11 @@ def login_required(method, admin=False):
             return method(self, *args, **kwargs)
     return wrapper
 
+
 # Administrator required decorator
 def admin_required(method):
     return login_required(method, admin=True)
+
 
 class BaseRequestHandler(webapp.RequestHandler):
     ''' Suplies a common template generation method. '''
@@ -81,7 +92,7 @@ class BaseRequestHandler(webapp.RequestHandler):
 
         values = {
             'request': self.request,
-            'user': self.current_user,
+            'current_user': self.current_user,
             'login_url': users.create_login_url(self.request.uri),
             'logout_url': users.create_logout_url('http://%s/' % self.request.host),
             'settings': settings,
@@ -107,7 +118,7 @@ class BaseRequestHandler(webapp.RequestHandler):
 class HomeHandler(BaseRequestHandler):
     def get(self):
         if self.current_user:
-            self.redirect('/new')
+            self.redirect('/profile')
         else:
             self.generate('index.html')
 
@@ -203,7 +214,7 @@ class AppointmentHandler(BaseRequestHandler):
         if not appointment:
             return self.error(404)
         invitees = Invite.all().filter('appointment =', appointment)
-        self.generate('appointment.html', {'appointment': appointment, 'invitees': invitees, 'email': user})
+        self.generate('appointment.html', {'appointment': appointment, 'invitees': invitees, 'user': user})
 
 
 class AppointmentsHandler(BaseRequestHandler):
@@ -248,6 +259,90 @@ class AvailabilityHandler(BaseRequestHandler):
         invitee.put()
 
 
+class ProfileHandler(BaseRequestHandler):
+    ''' Profile. '''
+    def get(self):
+        email = self.request.get('user')
+        if not email:
+            user = self.current_user
+        else:
+            user = users.User(email)
+
+        invitations = Appointment.all().filter('invitee_list =', user.email())
+        appointments = Appointment.all().filter('email =', user.email())
+        photos = Photo.all().filter('user =', user)
+
+        upload_url = blobstore.create_upload_url('/upload')
+        self.generate('profile.html', {'photos': photos, 'appointments': appointments, 'invitations': invitations, 'upload_url': upload_url, 'user': user})
+
+
+class PhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    ''' File uploader. '''
+    @login_required
+    def post(self):
+        for upload, comment in map(lambda x, y: (x, y), self.get_uploads(), self.request.get_all('comment')):
+            photo = Photo(
+                user=users.get_current_user(),
+                blob_info=upload.key(),
+                comment=comment)
+            photo.put()
+
+        self.redirect('/profile')
+
+
+class PhotosHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        email = self.request.get('user')
+        if not email:
+            user = self.current_user
+        else:
+            user = users.User(email)
+
+        thumbs = Photo.all().filter('user =', user).filter('blob_info !=', photo.blob_info.key())
+        self.generate('photos.html', {'photo': photo, 'thumbs': thumbs, 'user': user})
+
+class FullPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        self.send_blob(photo.blob_info)
+
+
+class PhotoHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        blob_key = str(photo.blob_info.key())
+        img = images.Image(blob_key=blob_key)
+        img.resize(width=600, height=600)
+        img.im_feeling_lucky()
+        thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        self.response.headers['Content-Type'] = 'image/jpg'
+        self.response.out.write(thumbnail)
+
+
+class ThumbHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        blob_key = str(photo.blob_info.key())
+        img = images.Image(blob_key=blob_key)
+        img.resize(width=150, height=150)
+        img.im_feeling_lucky()
+        thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        self.response.headers['Content-Type'] = 'image/jpg'
+        self.response.out.write(thumbnail)
+
 class Http404(BaseRequestHandler):
     def get(self):
         return self.error(404)
@@ -260,6 +355,13 @@ if __name__ == '__main__':
         (r'/appointment', AppointmentHandler),
         (r'/appointments', AppointmentsHandler),
         (r'/availability', AvailabilityHandler),
+        (r'/profile', ProfileHandler),
+        (r'/profile/([^/]+)', ProfileHandler),
+        (r'/photos/([^/]+)', PhotosHandler),
+        (r'/upload', PhotoUploadHandler),
+        (r'/photo/([^/]+)', PhotoHandler),
+        (r'/photo/([^/]+)/full', FullPhotoHandler),
+        (r'/thumb/([^/]+)', ThumbHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div id="content">
+    <div id="photo"><img src="/photo/{{ photo.key }}" /></div>
+    <p>{% trans "More photos from" %} {{ user }}
+    <div id="thumbs">
+        {% for thumb in thumbs %}
+        <div class="thumb">
+            <a href="/photos/{{ thumb.key }}{% ifnotequal user current_user %}?user={{ user.email }}{% endifnotequal %}"><img src="/thumb/{{ thumb.key }}" /></a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}
+

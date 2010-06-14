@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div id="profile">
+    <div id="appointments">
+        {% if appointments.count or invitations.count %}
+        <table>
+            <thead>
+                <th>{% trans "Appointment" %}</th>
+                <th>{% trans "Dates" %}</th>
+            </thead>
+            <tbody>
+            {% for appointment in appointments %}
+                <tr>
+                    <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
+                    <td>{{ appointment.dates }}</td>
+                </tr>
+            {% endfor %}
+            {% for appointment in invitations %}
+                <tr>
+                    <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
+                    <td>{{ appointment.dates }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>{% trans "No appointments" %}.</p>
+        {% endif %}
+    </div>
+    {% ifequal user current_user %}
+    <div id="photo-upload">
+        <form class="photo-form" action="{{ upload_url }}" enctype="multipart/form-data" method="post">
+            <p><label for="file">{% trans "File" %}</label><input type="file" name="file" /></p>
+            <p><label for="comment">{% trans "Comment" %}</label><input type="text" name="comment" /></p>
+            <p><input type="submit" id="submit" name="submit" value="{% trans 'Send photo' %}" /></p>
+        </form>
+    </div>
+    {% endifequal %}
+    <div id="photos">
+    {% for photo in photos %}
+        <div>
+            <span class="thumb"><a href="/photos/{{ photo.key }}{% ifnotequal user current_user %}?user={{ user.email }}{% endifnotequal %}"><img src="/thumb/{{ photo.key }}" /></a></span>
+            <span class="comment">{{ photo.comment }}</span>
+        </div>
+        <hr />
+    {% endfor %}
+    </div>
+</div>
+{% endblock content %}
+

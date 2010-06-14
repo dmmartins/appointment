@@ -29,8 +29,8 @@
     <div id="header">
         <div id="menu">
             <ul>
-                {% if user %}
-                <li>{{ user }}</li>
+                {% if current_user %}
+                <li><a href="/profile">{{ current_user }}</a></li>
                 <li><a href="/new">{% trans "New appointment" %}</a></li>
                 <li><a href="{{ logout_url }}">{% trans "Logout" %}</a></li>
                 {% else %}
