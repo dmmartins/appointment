@@ -2,6 +2,19 @@
 
 {% load i18n %}
 
+{% block javascript %}
+<script src="/static/js/galleria.js"></script>
+{% endblock %}
+
+{% block jquery %}
+<script type="text/javascript">
+Galleria.loadTheme('/static/css/galleria-classic/galleria.classic.js');
+$(document).ready(function() {
+    $('.photos').galleria();
+});
+</script>
+{% endblock jquery %}
+
 {% block content %}
 <div id="profile">
     <div id="appointments">
@@ -39,15 +52,13 @@
         </form>
     </div>
     {% endifequal %}
-    <div id="photos">
+    {% if photos.count %}
+    <div class="photos">
     {% for photo in photos %}
-        <div>
-            <span class="thumb"><a href="/photos/{{ photo.key }}{% ifnotequal user current_user %}?user={{ user.email }}{% endifnotequal %}"><img src="/thumb/{{ photo.key }}" /></a></span>
-            <span class="comment">{{ photo.comment }}</span>
-        </div>
-        <hr />
+        <a href="/photo/{{ photo.key }}/full"><img src="/photo/{{ photo.key }}" alt="{{ photo.comment }}" /></a>
     {% endfor %}
     </div>
+    {% endif %}
 </div>
 {% endblock content %}
 

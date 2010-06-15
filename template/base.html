@@ -7,21 +7,18 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>{% block title %}{{ settings.app_config.title }}{% endblock %}</title>
-    
-    {% block style %}
-    <link rel="stylesheet" type="text/css" href="/static/css/ui-lightness/jquery-ui-1.8.1.custom.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
-    <link rel="stylesheet" media="screen" type="text/css" href="/static/css/jquery.timepickr.css" />
-    {% endblock %}
+    <link rel="stylesheet" type="text/css" href="/static/css/ui-lightness/jquery-ui-1.8.1.custom.css" />
+
+   
+    {% block style %}{% endblock %}
 
     {% block head %}{% endblock %}
 
-    {% block javascript %}
     <script src="/static/js/jquery-1.4.2.min.js"></script>
     <script src="/static/js/jquery-ui-1.8.1.custom.min.js"></script>
-    <script src="/static/js/jquery-dynamic-form.js"></script>
-    <script src="/static/js/jquery.timeentry.js"></script>
-    {% endblock %}
+
+    {% block javascript %}{% endblock %}
 
     {% block jquery %}{% endblock %}
 </head>

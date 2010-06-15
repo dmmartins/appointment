@@ -289,21 +289,22 @@ class PhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
 
         self.redirect('/profile')
 
-
-class PhotosHandler(BaseRequestHandler):
+class PhotoHandler(BaseRequestHandler):
     def get(self, photo_key):
         photo = Photo.get(photo_key)
         if not photo:
             return self.error(404)
 
-        email = self.request.get('user')
-        if not email:
-            user = self.current_user
-        else:
-            user = users.User(email)
+        blob_key = str(photo.blob_info.key())
+        img = images.Image(blob_key=blob_key)
+        img.im_feeling_lucky()
+        thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        if img.width > 500:
+            img.resize(width=500)
+            thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        self.response.headers['Content-Type'] = 'image/jpg'
+        self.response.out.write(thumbnail)
 
-        thumbs = Photo.all().filter('user =', user).filter('blob_info !=', photo.blob_info.key())
-        self.generate('photos.html', {'photo': photo, 'thumbs': thumbs, 'user': user})
 
 class FullPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, photo_key):
@@ -314,21 +315,6 @@ class FullPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
         self.send_blob(photo.blob_info)
 
 
-class PhotoHandler(BaseRequestHandler):
-    def get(self, photo_key):
-        photo = Photo.get(photo_key)
-        if not photo:
-            return self.error(404)
-
-        blob_key = str(photo.blob_info.key())
-        img = images.Image(blob_key=blob_key)
-        img.resize(width=600, height=600)
-        img.im_feeling_lucky()
-        thumbnail = img.execute_transforms(output_encoding=images.JPEG)
-        self.response.headers['Content-Type'] = 'image/jpg'
-        self.response.out.write(thumbnail)
-
-
 class ThumbHandler(BaseRequestHandler):
     def get(self, photo_key):
         photo = Photo.get(photo_key)
@@ -337,7 +323,7 @@ class ThumbHandler(BaseRequestHandler):
 
         blob_key = str(photo.blob_info.key())
         img = images.Image(blob_key=blob_key)
-        img.resize(width=150, height=150)
+        img.resize(width=150)
         img.im_feeling_lucky()
         thumbnail = img.execute_transforms(output_encoding=images.JPEG)
         self.response.headers['Content-Type'] = 'image/jpg'
@@ -357,7 +343,6 @@ if __name__ == '__main__':
         (r'/availability', AvailabilityHandler),
         (r'/profile', ProfileHandler),
         (r'/profile/([^/]+)', ProfileHandler),
-        (r'/photos/([^/]+)', PhotosHandler),
         (r'/upload', PhotoUploadHandler),
         (r'/photo/([^/]+)', PhotoHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),

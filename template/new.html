@@ -2,6 +2,15 @@
 
 {% load i18n %}
 
+{% block style %}
+<link rel="stylesheet" media="screen" type="text/css" href="/static/css/jquery.timepickr.css" />
+{% endblock style %}
+
+{% block javascript %}
+<script src="/static/js/jquery-dynamic-form.js"></script>
+<script src="/static/js/jquery.timeentry.js"></script>
+{% endblock javascript %}
+
 {% block jquery %}
 <script type="text/javascript">
     var dateOptions = {
