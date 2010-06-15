@@ -60,6 +60,19 @@ class Photo(db.Model):
     user = db.UserProperty(required=True)
     blob_info = blobstore.BlobReferenceProperty(required=True)
     comment = db.StringProperty(required=False)
+    public = db.BooleanProperty(required=True)
+    _rotate = db.IntegerProperty(required=False, default=0)
+
+    def _get_rotate(self):
+        return self._rotate
+
+    def _set_rotate(self, angle):
+        if self._rotate == None:
+            self._rotate = 0
+        self._rotate = angle
+        if self._rotate > 360 or self._rotate < 0:
+            self._rotate %= 360
+    rotate = property(_get_rotate, _set_rotate)
 
 
 # Login required decorator
@@ -271,6 +284,8 @@ class ProfileHandler(BaseRequestHandler):
         invitations = Appointment.all().filter('invitee_list =', user.email())
         appointments = Appointment.all().filter('email =', user.email())
         photos = Photo.all().filter('user =', user)
+        if not user == self.current_user:
+            photos.filter('public =', True)
 
         upload_url = blobstore.create_upload_url('/upload')
         self.generate('profile.html', {'photos': photos, 'appointments': appointments, 'invitations': invitations, 'upload_url': upload_url, 'user': user})
@@ -280,11 +295,12 @@ class PhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     ''' File uploader. '''
     @login_required
     def post(self):
-        for upload, comment in map(lambda x, y: (x, y), self.get_uploads(), self.request.get_all('comment')):
+        for upload, comment, public in map(lambda x, y, z: (x, y, bool(z)), self.get_uploads(), self.request.get_all('comment'), self.request.get_all('public')):
             photo = Photo(
                 user=users.get_current_user(),
                 blob_info=upload.key(),
-                comment=comment)
+                comment=comment,
+                public=public)
             photo.put()
 
         self.redirect('/profile')
@@ -295,9 +311,19 @@ class PhotoHandler(BaseRequestHandler):
         if not photo:
             return self.error(404)
 
+        self.generate('photo.html', {'photo': photo})
+
+
+class PhotosHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
         blob_key = str(photo.blob_info.key())
         img = images.Image(blob_key=blob_key)
         img.im_feeling_lucky()
+        img.rotate(photo.rotate)
         thumbnail = img.execute_transforms(output_encoding=images.JPEG)
         if img.width > 500:
             img.resize(width=500)
@@ -329,6 +355,31 @@ class ThumbHandler(BaseRequestHandler):
         self.response.headers['Content-Type'] = 'image/jpg'
         self.response.out.write(thumbnail)
 
+
+class RotateHandler(BaseRequestHandler):
+    @login_required
+    def post(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        angle = int(self.request.get('angle', 0))
+        photo.rotate += angle
+        photo.put()
+
+
+class ShareHandler(BaseRequestHandler):
+    @login_required
+    def post(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        public = bool(self.request.get('public'))
+        photo.public = public
+        photo.put()
+
+
 class Http404(BaseRequestHandler):
     def get(self):
         return self.error(404)
@@ -345,8 +396,11 @@ if __name__ == '__main__':
         (r'/profile/([^/]+)', ProfileHandler),
         (r'/upload', PhotoUploadHandler),
         (r'/photo/([^/]+)', PhotoHandler),
+        (r'/photos/([^/]+)', PhotosHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),
         (r'/thumb/([^/]+)', ThumbHandler),
+        (r'/rotate/([^/]+)', RotateHandler),
+        (r'/share/([^/]+)', ShareHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)

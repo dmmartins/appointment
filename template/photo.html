@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block jquery %}
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#rotate-left').button({icons: {primary: 'ui-icon-triangle-1-sw'}, text: false});
+    $('#rotate-right').button({icons: {primary: 'ui-icon-triangle-1-se'}, text: false});
+    $('#rotate-left').click(function() {
+        $.post('/rotate/{{ photo.key }}', {angle: -90}, function() {
+            $('#photo img').attr('src', '/photos/{{ photo.key }}?' + (new Date()).getTime());
+        });
+    });
+    $('#rotate-right').click(function() {
+        $.post('/rotate/{{ photo.key }}', {angle: 90}, function() {
+            $('#photo img').attr('src', '/photos/{{ photo.key }}?' + (new Date()).getTime());
+        });
+    });
+    $('#public').click(function() {
+        $.post('/share/{{ photo.key }}', $(this).serialize());
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <h2><a href="/profile?user={{ photo.user }}">{{ photo.user }}</a>'s photo</h2>
+    <div id="photo">
+        <img src="/photos/{{ photo.key }}" />
+    </div>
+    <p>{{ photo.comment }}</p>
+    {% ifequal photo.user current_user %}
+    <div id="photo-tools">
+    <button id="rotate-left">{% trans "Rotate left" %}</button>
+    <button id="rotate-right">{% trans "Rotate right" %}</button>
+    <input type="checkbox" {% if photo.public %}checked="true"{% endif %} name="public" id="public" value="true"><label for="public">{% trans "Public" %}</label>
+    </div>
+    {% endifequal %}
+</div>
+{% endblock content %}
+

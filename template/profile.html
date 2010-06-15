@@ -19,6 +19,7 @@ $(document).ready(function() {
 <div id="profile">
     <div id="appointments">
         {% if appointments.count or invitations.count %}
+        <h2>{{ user.email }} appointments.</h2>
         <table>
             <thead>
                 <th>{% trans "Appointment" %}</th>
@@ -43,22 +44,28 @@ $(document).ready(function() {
         <p>{% trans "No appointments" %}.</p>
         {% endif %}
     </div>
+    {% if photos.count %}
+    
+    <h2>{{ user }} photos.</h2>
+
+    <div class="photos">
+    {% for photo in photos %}
+        <a href="/photo/{{ photo.key }}"><img src="/photos/{{ photo.key }}" alt="{{ photo.comment }}" /></a>
+    {% endfor %}
+    </div>
+    {% endif %}
     {% ifequal user current_user %}
     <div id="photo-upload">
+        <h2>{% trans "Upload a photo" %}.</h2>
         <form class="photo-form" action="{{ upload_url }}" enctype="multipart/form-data" method="post">
             <p><label for="file">{% trans "File" %}</label><input type="file" name="file" /></p>
             <p><label for="comment">{% trans "Comment" %}</label><input type="text" name="comment" /></p>
+            <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">{% trans "Make this photo public" %}</label></p>
             <p><input type="submit" id="submit" name="submit" value="{% trans 'Send photo' %}" /></p>
         </form>
     </div>
     {% endifequal %}
-    {% if photos.count %}
-    <div class="photos">
-    {% for photo in photos %}
-        <a href="/photo/{{ photo.key }}/full"><img src="/photo/{{ photo.key }}" alt="{{ photo.comment }}" /></a>
-    {% endfor %}
-    </div>
-    {% endif %}
+
 </div>
 {% endblock content %}
 
