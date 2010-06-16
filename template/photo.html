@@ -26,7 +26,7 @@ $(document).ready(function() {
 
 {% block content %}
 <div id="content">
-    <h2><a href="/profile?user={{ photo.user }}">{{ photo.user }}</a>'s photo</h2>
+    <h2><a href="/profile?user={{ photo.user.email }}">{{ photo.user }}</a>'s photo</h2>
     <div id="photo">
         <img src="/photos/{{ photo.key }}" />
     </div>
