@@ -19,7 +19,7 @@ $(document).ready(function() {
 <div id="profile">
     <div id="appointments">
         {% if appointments.count or invitations.count %}
-        <h2>{{ user.email }} appointments.</h2>
+        <h2>{{ user }} appointments.</h2>
         <table>
             <thead>
                 <th>{% trans "Appointment" %}</th>
