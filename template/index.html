@@ -2,8 +2,34 @@
 
 {% load i18n %}
 
+{% block javascript %}
+<script src="/static/js/galleria.js"></script>
+{% endblock %}
+
+{% block jquery %}
+<script type="text/javascript">
+Galleria.loadTheme('/static/css/galleria-classic/galleria.classic.js');
+$(document).ready(function() {
+    $('.photos').galleria();
+});
+</script>
+{% endblock jquery %}
+
+
 {% block content %}
 <p>{% trans "Welcome to" %} {{ settings.app_config.title }}.</p>
+{% if current_user %}
+<div id="content">
+    {% if photos.count %}
+    <div class="photos">
+        {% for photo in photos %}
+        <a href="/photo/{{ photo.key }}"><img src="/photos/{{ photo.key }}" title="{{ photo.comment }}" alt="{{ photo.user }}" /></a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% else %}
 <p>{% trans "Please" %} <a href="{{ login_url }}">{% trans "login" %}</a> {% trans "to create an appointment" %}.</p>
+{% endif %}
 {% endblock %}
 

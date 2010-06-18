@@ -17,6 +17,7 @@ from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
+from django.utils import simplejson
 
 # Use Django translation
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -130,10 +131,8 @@ class BaseRequestHandler(webapp.RequestHandler):
 
 class HomeHandler(BaseRequestHandler):
     def get(self):
-        if self.current_user:
-            self.redirect('/profile')
-        else:
-            self.generate('index.html')
+        photos = Photo.all()
+        self.generate('index.html', { 'photos': photos})
 
 
 class NewAppointmentHandler(BaseRequestHandler):
@@ -272,6 +271,23 @@ class AvailabilityHandler(BaseRequestHandler):
         invitee.put()
 
 
+class AppointmentRemoveHandler(BaseRequestHandler):
+    def post(self):
+        key = self.request.get('key');
+        appointment = Appointment.get(key)
+        if not appointment:
+            return self.error(404)
+
+        if appointment.email == self.current_user.email:
+            return self.error(405)
+
+        invitees = Invite.all().filter('appointment =', appointment)
+        for invitee in invitees:
+            invitee.delete()
+
+        appointment.delete()
+
+
 class ProfileHandler(BaseRequestHandler):
     ''' Profile. '''
     def get(self):
@@ -295,15 +311,25 @@ class PhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     ''' File uploader. '''
     @login_required
     def post(self):
+        errors = []
         for upload, comment, public in map(lambda x, y, z: (x, y, bool(z)), self.get_uploads(), self.request.get_all('comment'), self.request.get_all('public')):
-            photo = Photo(
-                user=users.get_current_user(),
-                blob_info=upload.key(),
-                comment=comment,
-                public=public)
-            photo.put()
+            if upload.size > 1000000:
+                errors.append('%s' % upload.filename + _('is too large'))
+                upload.delete()
+                self.redirect('/toolarge')
+            else:
+                photo = Photo(
+                    user=users.get_current_user(),
+                    blob_info=upload.key(),
+                    comment=comment,
+                    public=public)
+                photo.put()
+                self.redirect('/profile')
 
-        self.redirect('/profile')
+class TooLargeHandler(BaseRequestHandler):
+    def get(self):
+        self.generate('toolarge.html')
+
 
 class PhotoHandler(BaseRequestHandler):
     def get(self, photo_key):
@@ -363,6 +389,9 @@ class RotateHandler(BaseRequestHandler):
         if not photo:
             return self.error(404)
 
+        if photo.user != self.current_user:
+            return self.error(405)
+
         angle = int(self.request.get('angle', 0))
         photo.rotate += angle
         photo.put()
@@ -375,9 +404,27 @@ class ShareHandler(BaseRequestHandler):
         if not photo:
             return self.error(404)
 
+        if photo.user != self.current_user:
+            return self.error(405)
+
         public = bool(self.request.get('public'))
         photo.public = public
         photo.put()
+
+
+class RemoveHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        photo_key = self.request.get('photo_key')
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        if photo.user != self.current_user:
+            return self.error(405)
+
+        photo.blob_info.delete()
+        photo.delete()
 
 
 class Http404(BaseRequestHandler):
@@ -390,17 +437,20 @@ if __name__ == '__main__':
         (r'/', HomeHandler),
         (r'/new', NewAppointmentHandler),
         (r'/appointment', AppointmentHandler),
+        (r'/appointment/remove', AppointmentRemoveHandler),
         (r'/appointments', AppointmentsHandler),
         (r'/availability', AvailabilityHandler),
         (r'/profile', ProfileHandler),
         (r'/profile/([^/]+)', ProfileHandler),
         (r'/upload', PhotoUploadHandler),
+        (r'/toolarge', TooLargeHandler),
         (r'/photo/([^/]+)', PhotoHandler),
         (r'/photos/([^/]+)', PhotosHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),
         (r'/thumb/([^/]+)', ThumbHandler),
         (r'/rotate/([^/]+)', RotateHandler),
         (r'/share/([^/]+)', ShareHandler),
+        (r'/remove', RemoveHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)

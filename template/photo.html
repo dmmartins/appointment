@@ -5,8 +5,9 @@
 {% block jquery %}
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#rotate-left').button({icons: {primary: 'ui-icon-triangle-1-sw'}, text: false});
-    $('#rotate-right').button({icons: {primary: 'ui-icon-triangle-1-se'}, text: false});
+    $('#rotate-left').button({icons: {primary: 'ui-icon-arrowreturn-1-w'}, text: false});
+    $('#rotate-right').button({icons: {primary: 'ui-icon-arrowrefresh-1-e'}, text: false});
+    $('#remove').button({icons: {primary: 'ui-icon-trash'}, text: false});
     $('#rotate-left').click(function() {
         $.post('/rotate/{{ photo.key }}', {angle: -90}, function() {
             $('#photo img').attr('src', '/photos/{{ photo.key }}?' + (new Date()).getTime());
@@ -19,6 +20,12 @@ $(document).ready(function() {
     });
     $('#public').click(function() {
         $.post('/share/{{ photo.key }}', $(this).serialize());
+    });
+    $('#remove').click(function() {
+        if (confirm('{% trans "Do you want to remove this photo" %}?')) {
+            $.post('/remove', {photo_key: '{{ photo.key }}'});
+            $('#content').html('<p>Photo removed. <a href="/profile">Back to {{ photo.user }} profile</a></p>');
+        }
     });
 });
 </script>
@@ -36,6 +43,7 @@ $(document).ready(function() {
     <button id="rotate-left">{% trans "Rotate left" %}</button>
     <button id="rotate-right">{% trans "Rotate right" %}</button>
     <input type="checkbox" {% if photo.public %}checked="true"{% endif %} name="public" id="public" value="true"><label for="public">{% trans "Public" %}</label>
+    <button id="remove">{%trans "Remove" %}</button>
     </div>
     {% endifequal %}
 </div>

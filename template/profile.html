@@ -11,6 +11,16 @@
 Galleria.loadTheme('/static/css/galleria-classic/galleria.classic.js');
 $(document).ready(function() {
     $('.photos').galleria();
+    $('.remove').button({icons: {primary: 'ui-icon-trash'}, text: false});
+    $('.remove').click(function() {
+        var key = $(this).attr('name');
+        var tr = $(this).parents().parents().first();
+        if (confirm('{% trans "Remove this appointment" %}?')) {
+            $.post('/appointment/remove', {key: key}, function() {
+                tr.replaceWith('');
+            });
+        }
+    });
 });
 </script>
 {% endblock jquery %}
@@ -24,18 +34,21 @@ $(document).ready(function() {
             <thead>
                 <th>{% trans "Appointment" %}</th>
                 <th>{% trans "Dates" %}</th>
+                <th></th>
             </thead>
             <tbody>
             {% for appointment in appointments %}
                 <tr>
                     <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
+                    <td><button class="remove" name="{{ appointment.key }}">{% trans "Remove" %}</button></td>
                 </tr>
             {% endfor %}
             {% for appointment in invitations %}
                 <tr>
                     <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
+                    <td><button class="remove" name="{{ appointment.key }}">{% trans "Remove" %}</button></td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -45,7 +58,7 @@ $(document).ready(function() {
         {% endif %}
     </div>
     {% if photos.count %}
-    
+
     <h2>{{ user }} photos.</h2>
 
     <div class="photos">
@@ -57,12 +70,21 @@ $(document).ready(function() {
     {% ifequal user current_user %}
     <div id="photo-upload">
         <h2>{% trans "Upload a photo" %}.</h2>
-        <form class="photo-form" action="{{ upload_url }}" enctype="multipart/form-data" method="post">
-            <p><label for="file">{% trans "File" %}</label><input type="file" name="file" /></p>
+        {% if errors %}
+        <ul id="error">
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form class="photo-form" enctype="multipart/form-data" action="{{ upload_url }}" method="post">
+            <p><label for="file">{% trans "File (max file size: 1MB)" %}</label><input type="file" name="file" /></p>
             <p><label for="comment">{% trans "Comment" %}</label><input type="text" name="comment" /></p>
             <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">{% trans "Make this photo public" %}</label></p>
-            <p><input type="submit" id="submit" name="submit" value="{% trans 'Send photo' %}" /></p>
+            <p><input type="submit" id="submit" value="{% trans 'Send photo' %}" /></p>
         </form>
+       
     </div>
     {% endifequal %}
 
