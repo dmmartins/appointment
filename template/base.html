@@ -29,6 +29,7 @@
                 {% if current_user %}
                 <li><a href="/profile">{{ current_user }}</a></li>
                 <li><a href="/new">{% trans "New appointment" %}</a></li>
+                <li><a href="/public">{% trans "Public pictures" %}</a></li>
                 <li><a href="{{ logout_url }}">{% trans "Logout" %}</a></li>
                 {% else %}
                 <li><a href="{{ login_url }}">{% trans "Login" %}</a></li>

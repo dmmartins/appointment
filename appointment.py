@@ -131,8 +131,10 @@ class BaseRequestHandler(webapp.RequestHandler):
 
 class HomeHandler(BaseRequestHandler):
     def get(self):
-        photos = Photo.all()
-        self.generate('index.html', { 'photos': photos})
+        if self.current_user:
+            self.redirect('/profile')
+        else:
+            self.generate('index.html')
 
 
 class NewAppointmentHandler(BaseRequestHandler):
@@ -216,6 +218,12 @@ class NewAppointmentHandler(BaseRequestHandler):
             msg.send()
 
         self.redirect('/appointment?key=%s&user=%s' % (appointment.key(), appointment.email))
+
+
+class PublicImagesHandler(BaseRequestHandler):
+    def get(self):
+        photos = Photo.all().filter('public =', True)
+        self.generate('public.html', {'photos': photos})
 
 
 class AppointmentHandler(BaseRequestHandler):
@@ -443,6 +451,7 @@ if __name__ == '__main__':
         (r'/profile', ProfileHandler),
         (r'/profile/([^/]+)', ProfileHandler),
         (r'/upload', PhotoUploadHandler),
+        (r'/public', PublicImagesHandler),
         (r'/toolarge', TooLargeHandler),
         (r'/photo/([^/]+)', PhotoHandler),
         (r'/photos/([^/]+)', PhotosHandler),
