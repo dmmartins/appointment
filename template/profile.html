@@ -39,14 +39,14 @@ $(document).ready(function() {
             <tbody>
             {% for appointment in appointments %}
                 <tr>
-                    <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
+                    <td><a href="/appointment?key={{ appointment.key }}&user={{ current_user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
                     <td><button class="remove" name="{{ appointment.key }}">{% trans "Remove" %}</button></td>
                 </tr>
             {% endfor %}
             {% for appointment in invitations %}
                 <tr>
-                    <td><a href="/appointment?key={{ appointment.key }}&user={{ user.email }}">{{ appointment.description }}</a></td>
+                    <td><a href="/appointment?key={{ appointment.key }}&user={{ current_user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
                     <td><button class="remove" name="{{ appointment.key }}">{% trans "Remove" %}</button></td>
                 </tr>
