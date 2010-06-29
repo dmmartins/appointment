@@ -76,6 +76,14 @@ class Photo(db.Model):
     rotate = property(_get_rotate, _set_rotate)
 
 
+class File(db.Model):
+    ''' User file. '''
+    user = db.UserProperty(required=True)
+    blob_info = blobstore.BlobReferenceProperty(required=True)
+    comment = db.StringProperty(required=False)
+    public = db.BooleanProperty(required=True)
+
+
 # Login required decorator
 def login_required(method, admin=False):
     @functools.wraps(method)
@@ -310,28 +318,38 @@ class ProfileHandler(BaseRequestHandler):
         photos = Photo.all().filter('user =', user)
         if not user == self.current_user:
             photos.filter('public =', True)
+        files = File.all().filter('user =', user)
+        if not user == self.current_user:
+            files.filter('public =', True)
 
         upload_url = blobstore.create_upload_url('/upload')
-        self.generate('profile.html', {'photos': photos, 'appointments': appointments, 'invitations': invitations, 'upload_url': upload_url, 'user': user})
+        self.generate('profile.html', {'photos': photos, 'files': files, 'appointments': appointments, 'invitations': invitations, 'upload_url': upload_url, 'user': user})
 
 
-class PhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     ''' File uploader. '''
     @login_required
     def post(self):
-        errors = []
         for upload, comment, public in map(lambda x, y, z: (x, y, bool(z)), self.get_uploads(), self.request.get_all('comment'), self.request.get_all('public')):
-            if upload.size > 1000000:
-                errors.append('%s' % upload.filename + _('is too large'))
-                upload.delete()
-                self.redirect('/toolarge')
+            if 'image' in upload.content_type:
+                if upload.size > 1000000:
+                    upload.delete()
+                    self.redirect('/toolarge')
+                else:
+                    photo = Photo(
+                        user=users.get_current_user(),
+                        blob_info=upload.key(),
+                        comment=comment,
+                        public=public)
+                    photo.put()
+                    self.redirect('/profile')
             else:
-                photo = Photo(
+                file_ = File(
                     user=users.get_current_user(),
                     blob_info=upload.key(),
                     comment=comment,
                     public=public)
-                photo.put()
+                file_.put()
                 self.redirect('/profile')
 
 class TooLargeHandler(BaseRequestHandler):
@@ -420,7 +438,7 @@ class ShareHandler(BaseRequestHandler):
         photo.put()
 
 
-class RemoveHandler(BaseRequestHandler):
+class PhotoRemoveHandler(BaseRequestHandler):
     @login_required
     def post(self):
         photo_key = self.request.get('photo_key')
@@ -433,6 +451,30 @@ class RemoveHandler(BaseRequestHandler):
 
         photo.blob_info.delete()
         photo.delete()
+
+
+class FileHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, file_key):
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        self.send_blob(file_.blob_info)
+
+
+class FileRemoveHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        file_key = self.request.get('file_key')
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        if file_.user != self.current_user:
+            return self.error(405)
+
+        file_.blob_info.delete()
+        file_.delete()
 
 
 class Http404(BaseRequestHandler):
@@ -450,16 +492,18 @@ if __name__ == '__main__':
         (r'/availability', AvailabilityHandler),
         (r'/profile', ProfileHandler),
         (r'/profile/([^/]+)', ProfileHandler),
-        (r'/upload', PhotoUploadHandler),
+        (r'/upload', UploadHandler),
         (r'/public', PublicImagesHandler),
         (r'/toolarge', TooLargeHandler),
+        (r'/photo/remove', PhotoRemoveHandler),
         (r'/photo/([^/]+)', PhotoHandler),
         (r'/photos/([^/]+)', PhotosHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),
         (r'/thumb/([^/]+)', ThumbHandler),
         (r'/rotate/([^/]+)', RotateHandler),
         (r'/share/([^/]+)', ShareHandler),
-        (r'/remove', RemoveHandler),
+        (r'/file/remove', FileRemoveHandler),
+        (r'/file/([^/]+)', FileHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)

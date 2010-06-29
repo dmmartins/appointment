@@ -12,11 +12,21 @@ Galleria.loadTheme('/static/css/galleria-classic/galleria.classic.js');
 $(document).ready(function() {
     $('.photos').galleria();
     $('.remove').button({icons: {primary: 'ui-icon-trash'}, text: false});
+    $('.remove-file').button({icons: {primary: 'ui-icon-trash'}, text: false});
     $('.remove').click(function() {
         var key = $(this).attr('name');
         var tr = $(this).parents().parents().first();
         if (confirm('{% trans "Remove this appointment" %}?')) {
             $.post('/appointment/remove', {key: key}, function() {
+                tr.replaceWith('');
+            });
+        }
+    });
+    $('.remove-file').click(function() {
+        var key = $(this).attr('name');
+        var tr = $(this).parents().parents().first();
+        if (confirm('{% trans "Remove this file" %}?')) {
+            $.post('/file/remove', {file_key: key}, function() {
                 tr.replaceWith('');
             });
         }
@@ -58,6 +68,30 @@ $(document).ready(function() {
         <p>{% trans "No appointments" %}.</p>
         {% endif %}
     </div>
+
+    {% if files.count %}
+    <div id="files">
+        <h2>{{ user }} files.</h2>
+        <table>
+            <thead>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Comment" %}</th>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td><a href="/file/{{ file.key }}">{{ file.blob_info.filename }}</a></td>
+                    <td>{{ file.comment }}</td>
+                    {% ifequal user current_user %}
+                    <td><button class="remove-file" name="{{ file.key }}">{% trans "Remove" %}</button></td>
+                    {% endifequal %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
     {% if photos.count %}
 
     <h2>{{ user }} photos.</h2>
@@ -69,8 +103,8 @@ $(document).ready(function() {
     </div>
     {% endif %}
     {% ifequal user current_user %}
-    <div id="photo-upload">
-        <h2>{% trans "Upload a photo" %}.</h2>
+    <div id="file-upload">
+        <h2>{% trans "Upload a file" %}.</h2>
         {% if errors %}
         <ul id="error">
             {% for error in errors %}
@@ -79,11 +113,11 @@ $(document).ready(function() {
         </ul>
         {% endif %}
 
-        <form class="photo-form" enctype="multipart/form-data" action="{{ upload_url }}" method="post">
-            <p><label for="file">{% trans "File (max file size: 1MB)" %}</label><input type="file" name="file" /></p>
+        <form class="file-form" enctype="multipart/form-data" action="{{ upload_url }}" method="post">
+            <p><label for="file">{% trans "File" %}</label><input type="file" name="file" /></p>
             <p><label for="comment">{% trans "Comment" %}</label><input type="text" name="comment" /></p>
-            <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">{% trans "Make this photo public" %}</label></p>
-            <p><input type="submit" id="submit" value="{% trans 'Send photo' %}" /></p>
+            <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">{% trans "Make this file public" %}</label></p>
+            <p><input type="submit" id="submit" value="{% trans 'Send file' %}" /></p>
         </form>
        
     </div>

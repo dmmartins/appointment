@@ -124,11 +124,11 @@ a {
     background: #7bf;
 }
 
-.app-form input, .photo-form input {
+.app-form input, .file-form input {
     width: 500px;
 }
 
-.app-form label, .photo-form label {
+.app-form label, .file-form label {
     width: 150px;
     float: left;
 }
@@ -142,7 +142,7 @@ a {
 }
 
 
-.app-form #submit, .photo-form #submit {
+.app-form #submit, .file-form #submit {
     width: 150px;
 }
 

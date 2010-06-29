@@ -23,7 +23,7 @@ $(document).ready(function() {
     });
     $('#remove').click(function() {
         if (confirm('{% trans "Do you want to remove this photo" %}?')) {
-            $.post('/remove', {photo_key: '{{ photo.key }}'});
+            $.post('/photo/remove', {photo_key: '{{ photo.key }}'});
             $('#content').html('<p>Photo removed. <a href="/profile">Back to {{ photo.user }} profile</a></p>');
         }
     });
