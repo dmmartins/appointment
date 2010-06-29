@@ -6,6 +6,7 @@
 import os
 import datetime
 import functools
+import urllib
 
 # GAE imports
 from google.appengine.api import users
@@ -13,6 +14,7 @@ from google.appengine.api import mail
 from google.appengine.api import images
 from google.appengine.ext import webapp
 from google.appengine.ext import db
+from google.appengine.ext import search
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import blobstore_handlers
@@ -408,6 +410,15 @@ class ThumbHandler(BaseRequestHandler):
         self.response.out.write(thumbnail)
 
 
+class PhotoSearchHandler(BaseRequestHandler):
+    def get(self):
+        query = self.request.get('q')
+        email = self.request.get('user')
+        user = users.User(urllib.unquote(email))
+        photos = (p for p in Photo.all().filter('user =', user) if query in p.comment)
+        self.generate('searchresult.html', {'photos': photos, 'query': query})
+
+
 class RotateHandler(BaseRequestHandler):
     @login_required
     def post(self, photo_key):
@@ -454,7 +465,7 @@ class PhotoRemoveHandler(BaseRequestHandler):
 
 
 class FileHandler(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self, file_key):
+    def get(self, file_key, file_name):
         file_ = File.get(file_key)
         if not file_:
             return self.error(404)
@@ -496,6 +507,7 @@ if __name__ == '__main__':
         (r'/public', PublicImagesHandler),
         (r'/toolarge', TooLargeHandler),
         (r'/photo/remove', PhotoRemoveHandler),
+        (r'/photo/search', PhotoSearchHandler),
         (r'/photo/([^/]+)', PhotoHandler),
         (r'/photos/([^/]+)', PhotosHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),
@@ -503,7 +515,7 @@ if __name__ == '__main__':
         (r'/rotate/([^/]+)', RotateHandler),
         (r'/share/([^/]+)', ShareHandler),
         (r'/file/remove', FileRemoveHandler),
-        (r'/file/([^/]+)', FileHandler),
+        (r'/file/([^/]+)/([^/]+)', FileHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)

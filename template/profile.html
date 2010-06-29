@@ -52,7 +52,7 @@ $(document).ready(function() {
                     <td><a href="/appointment?key={{ appointment.key }}&user={{ current_user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
                     {% ifequal user current_user %}
-                    <td><button class="remove" name="{{ appointment.key }}">{% trans "Remove" %}</button></td>
+                    <td><button class="remove" name="{{ appointment.key }}">{% trans 'Remove' %}</button></td>
                     {% endifequal %}
                 </tr>
             {% endfor %}
@@ -65,7 +65,7 @@ $(document).ready(function() {
             </tbody>
         </table>
         {% else %}
-        <p>{% trans "No appointments" %}.</p>
+        <p>{% trans 'No appointments' %}.</p>
         {% endif %}
     </div>
 
@@ -80,10 +80,10 @@ $(document).ready(function() {
             <tbody>
                 {% for file in files %}
                 <tr>
-                    <td><a href="/file/{{ file.key }}">{{ file.blob_info.filename }}</a></td>
+                    <td><a href="/file/{{ file.key }}/{{ file.blob_info.filename }}">{{ file.blob_info.filename }}</a></td>
                     <td>{{ file.comment }}</td>
                     {% ifequal user current_user %}
-                    <td><button class="remove-file" name="{{ file.key }}">{% trans "Remove" %}</button></td>
+                    <td><button class="remove-file" name="{{ file.key }}">{% trans 'Remove' %}</button></td>
                     {% endifequal %}
                 </tr>
                 {% endfor %}
@@ -95,6 +95,15 @@ $(document).ready(function() {
     {% if photos.count %}
 
     <h2>{{ user }} photos.</h2>
+
+    <form id="photo-search" action="/photo/search" method="get">
+        <input type="hidden" name="user" value="{{ user }}" />
+        <p>
+            <label for="query">{% trans 'Search for a photo' %}</label>
+            <input type="text" name="q" />
+            <input type="submit" value="{% trans 'Search' %}" />
+        </p>
+    </form>
 
     <div class="photos">
     {% for photo in photos %}
