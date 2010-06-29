@@ -97,7 +97,7 @@ $(document).ready(function() {
     <h2>{{ user }} photos.</h2>
 
     <form id="photo-search" action="/photo/search" method="get">
-        <input type="hidden" name="user" value="{{ user }}" />
+        <input type="hidden" name="user" value="{{ user.email }}" />
         <p>
             <label for="query">{% trans 'Search for a photo' %}</label>
             <input type="text" name="q" />

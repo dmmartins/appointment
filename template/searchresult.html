@@ -12,20 +12,17 @@ Galleria.loadTheme('/static/css/galleria-classic/galleria.classic.js');
 $(document).ready(function() {
     $('.photos').galleria();
 });
+
 </script>
 {% endblock %}
 
 {% block content %}
-{% if photos.count %}
 <p>{% trans 'Search results for' %} {{ query }}:</p>
 
 <div class="photos">
-    {% for photo in photos %}
+{% for photo in photos %}
     <a href="/photo/{{ photo.key }}"><img src="/photos/{{ photo.key }}" alt="{{ photo.comment }}" /></a>
-    {% endfor %}
+{% endfor %}
 </div>
-{% else %}
-<p>{% trans 'No search results for' %} {{ query }}</p>
-{% endif %}
 {% endblock %}
 
