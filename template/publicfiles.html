@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div id="content">
+    {% if files.count %}
+    <div id="files">
+        <h2>{{ user }} files.</h2>
+        <table>
+            <thead>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Comment" %}</th>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td><a href="/files/{{ file.key }}/{{ file.blob_info.filename }}">{{ file.blob_info.filename }}</a></td>
+                    <td>{{ file.comment }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
+

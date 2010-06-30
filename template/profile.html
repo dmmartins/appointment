@@ -23,13 +23,17 @@ $(document).ready(function() {
         }
     });
     $('.remove-file').click(function() {
-        var key = $(this).attr('name');
+        var key = $(this).attr('id');
         var tr = $(this).parents().parents().first();
         if (confirm('{% trans "Remove this file" %}?')) {
-            $.post('/file/remove', {file_key: key}, function() {
+            $.post('/files/remove', {file_key: key}, function() {
                 tr.replaceWith('');
             });
         }
+    });
+    $('.share-file').click(function() {
+        var key = $(this).attr('id');
+        $.post('/files/share', {file_key: key});
     });
 });
 </script>
@@ -76,14 +80,18 @@ $(document).ready(function() {
             <thead>
                 <th>{% trans "Name" %}</th>
                 <th>{% trans "Comment" %}</th>
+                {% ifequal user current_user %}
+                <th>{% trans 'Public' %}
+                {% endifequal %}
             </thead>
             <tbody>
                 {% for file in files %}
                 <tr>
-                    <td><a href="/file/{{ file.key }}/{{ file.blob_info.filename }}">{{ file.blob_info.filename }}</a></td>
+                    <td><a href="/files/{{ file.key }}/{{ file.blob_info.filename }}">{{ file.blob_info.filename }}</a></td>
                     <td>{{ file.comment }}</td>
                     {% ifequal user current_user %}
-                    <td><button class="remove-file" name="{{ file.key }}">{% trans 'Remove' %}</button></td>
+                    <td><input type="checkbox" {% if file.public %}checked="true"{% endif %} class="share-file" id="{{ file.key }}" name="public" value="true" /></td>
+                    <td><button class="remove-file" id="{{ file.key }}">{% trans 'Remove' %}</button></td>
                     {% endifequal %}
                 </tr>
                 {% endfor %}

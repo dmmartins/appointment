@@ -9,21 +9,21 @@ $(document).ready(function() {
     $('#rotate-right').button({icons: {primary: 'ui-icon-arrowrefresh-1-e'}, text: false});
     $('#remove').button({icons: {primary: 'ui-icon-trash'}, text: false});
     $('#rotate-left').click(function() {
-        $.post('/rotate/{{ photo.key }}', {angle: -90}, function() {
+        $.post('/photos/rotate', {angle: -90, photo_key: '{{ photo.key }}'}, function() {
             $('#photo img').attr('src', '/photos/{{ photo.key }}?' + (new Date()).getTime());
         });
     });
     $('#rotate-right').click(function() {
-        $.post('/rotate/{{ photo.key }}', {angle: 90}, function() {
+        $.post('/photos/rotate', {angle: 90, photo_key: '{{ photo.key }}'}, function() {
             $('#photo img').attr('src', '/photos/{{ photo.key }}?' + (new Date()).getTime());
         });
     });
     $('#public').click(function() {
-        $.post('/share/{{ photo.key }}', $(this).serialize());
+        $.post('/photos/share', $.extend($(this).serialize(), {photo_key: '{{ photo.key }}'}));
     });
     $('#remove').click(function() {
         if (confirm('{% trans "Do you want to remove this photo" %}?')) {
-            $.post('/photo/remove', {photo_key: '{{ photo.key }}'});
+            $.post('/photos/remove', {photo_key: '{{ photo.key }}'});
             $('#content').html('<p>Photo removed. <a href="/profile">Back to {{ photo.user }} profile</a></p>');
         }
     });

@@ -233,7 +233,7 @@ class NewAppointmentHandler(BaseRequestHandler):
 class PublicImagesHandler(BaseRequestHandler):
     def get(self):
         photos = Photo.all().filter('public =', True)
-        self.generate('public.html', {'photos': photos})
+        self.generate('publicphotos.html', {'photos': photos})
 
 
 class AppointmentHandler(BaseRequestHandler):
@@ -419,9 +419,10 @@ class PhotoSearchHandler(BaseRequestHandler):
         self.generate('searchresult.html', {'photos': photos, 'query': query})
 
 
-class RotateHandler(BaseRequestHandler):
+class PhotoRotateHandler(BaseRequestHandler):
     @login_required
-    def post(self, photo_key):
+    def post(self):
+        photo_key = self.request.get('photo_key')
         photo = Photo.get(photo_key)
         if not photo:
             return self.error(404)
@@ -434,9 +435,10 @@ class RotateHandler(BaseRequestHandler):
         photo.put()
 
 
-class ShareHandler(BaseRequestHandler):
+class PhotoShareHandler(BaseRequestHandler):
     @login_required
-    def post(self, photo_key):
+    def post(self):
+        photo_key = self.request.get('photo_key')
         photo = Photo.get(photo_key)
         if not photo:
             return self.error(404)
@@ -464,7 +466,7 @@ class PhotoRemoveHandler(BaseRequestHandler):
         photo.delete()
 
 
-class FileHandler(blobstore_handlers.BlobstoreDownloadHandler):
+class FilesHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, file_key, file_name):
         file_ = File.get(file_key)
         if not file_:
@@ -488,6 +490,27 @@ class FileRemoveHandler(BaseRequestHandler):
         file_.delete()
 
 
+class FileShareHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        file_key = self.request.get('file_key')
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        if file_.user != self.current_user:
+            return self.error(405)
+
+        file_.public = bool(self.request.get('public'))
+        file_.put()
+
+
+class PublicFilesHandler(BaseRequestHandler):
+    def get(self):
+        files = File.all().filter('public =', True)
+        self.generate('publicfiles.html', {'files': files})
+
+
 class Http404(BaseRequestHandler):
     def get(self):
         return self.error(404)
@@ -504,18 +527,20 @@ if __name__ == '__main__':
         (r'/profile', ProfileHandler),
         (r'/profile/([^/]+)', ProfileHandler),
         (r'/upload', UploadHandler),
-        (r'/public', PublicImagesHandler),
         (r'/toolarge', TooLargeHandler),
-        (r'/photo/remove', PhotoRemoveHandler),
         (r'/photo/search', PhotoSearchHandler),
+        (r'/photo/public', PublicImagesHandler),
         (r'/photo/([^/]+)', PhotoHandler),
-        (r'/photos/([^/]+)', PhotosHandler),
         (r'/photo/([^/]+)/full', FullPhotoHandler),
-        (r'/thumb/([^/]+)', ThumbHandler),
-        (r'/rotate/([^/]+)', RotateHandler),
-        (r'/share/([^/]+)', ShareHandler),
-        (r'/file/remove', FileRemoveHandler),
-        (r'/file/([^/]+)/([^/]+)', FileHandler),
+        (r'/photos/remove', PhotoRemoveHandler),
+        (r'/photos/thumb', ThumbHandler),
+        (r'/photos/rotate', PhotoRotateHandler),
+        (r'/photos/share', PhotoShareHandler),
+        (r'/photos/([^/]+)', PhotosHandler),
+        (r'/files/remove', FileRemoveHandler),
+        (r'/files/share', FileShareHandler),
+        (r'/files/public', PublicFilesHandler),
+        (r'/files/([^/]+)/([^/]+)', FilesHandler),
         (r'/.*', Http404),
         ], debug=_DEBUG)
     run_wsgi_app(application)
