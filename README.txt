@@ -47,3 +47,7 @@ Request Handlers::
 When you call an url, eg. http://host.com/profile, the '/profile' part is mapped to a http request handler. In this application, except for file upload/download, all http request handlres inherite from BaseRequestHandler, a basic http request handler, that provides a template generator with some context variables, such current user, request parameters, etc.
 For every request handler that inherites from BaseRequestHandler is implemented the methods get(), for GET http requests and post() for POST http requests.
 
+Methods:
+  + genereate(template_name, template_values): Render 'template_name' passing 'template_values' as parameter using the Django Template System.
+  + error(code): Generate an error message for a http error code.
+
