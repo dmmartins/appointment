@@ -6,17 +6,19 @@
 <div id="content">
     {% if files.count %}
     <div id="files">
-        <h2>{{ user }} files.</h2>
+        <h2>Public files.</h2>
         <table>
             <thead>
                 <th>{% trans "Name" %}</th>
                 <th>{% trans "Comment" %}</th>
+                <th>{% trans "User" %}
             </thead>
             <tbody>
                 {% for file in files %}
                 <tr>
                     <td><a href="/files/{{ file.key }}/{{ file.blob_info.filename }}">{{ file.blob_info.filename }}</a></td>
                     <td>{{ file.comment }}</td>
+                    <td><a href="/profile?user={{ file.user.email }}">{{ file.user }}</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
