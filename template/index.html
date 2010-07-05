@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block content %}
-<p>{% trans "Welcome to" %} {{ settings.app_config.title }}.</p>
-<p>{% trans "Please" %} <a href="{{ login_url }}">{% trans "login" %}</a> {% trans "to create an appointment" %}.</p>
+<p>Welcome to {{ settings.app_config.title }}.</p>
+<p>Please <a href="{{ login_url }}">login</a> to create an appointment.</p>
 {% endblock %}
 

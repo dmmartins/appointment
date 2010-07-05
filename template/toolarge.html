@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block content %}
 <div id="content">
-    <h2>{% trans "Too large" %}!</h2>
-    <p>{% trans "The selected image is too large" %}.</p>
-    <p>{% trans "Max file size is 1MB" %}.</p>
-    <p><a href="/profile">{% trans "Back to profile" %}</a></p>
+    <h2>Too large!</h2>
+    <p>The selected image is too large.</p>
+    <p>Max file size is 1MB.</p>
+    <p><a href="/profile">Back to profile</a></p>
 </div>
 {% endblock %}
+

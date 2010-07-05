@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block javascript %}
 <script src="/static/js/galleria.js"></script>
 {% endblock %}
@@ -17,7 +15,7 @@ $(document).ready(function() {
 {% endblock %}
 
 {% block content %}
-<p>{% trans 'Search results for' %} {{ query }}:</p>
+<p>Search results for {{ query }}:</p>
 
 <div class="photos">
 {% for photo in photos %}

@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block style %}
 <link rel="stylesheet" media="screen" type="text/css" href="/static/css/jquery.timepickr.css" />
 {% endblock style %}
@@ -52,25 +50,25 @@
     <div class="app-form">
         <form action="" method="post">
             <p>
-                <label for="description">{% trans "Description" %}:</label>
+                <label for="description">Description:</label>
                 <input type="text" name="description" value="{{ appointment.description }}" />
             </p>
             <p>
-                <label for="invitees">{% trans "Invitees" %}:</label>
+                <label for="invitees">Invitees:</label>
                 <input type="text" name="invitees" value="{{ appointment.invitees }}" />
             </p>
-            <p>{% trans "Proposed dates" %}:</p>
+            <p>Proposed dates:</p>
             <p>
                 <div class="date-list" id="date-list">
-                    <label for="date">{% trans "Date" %}:</label>
+                    <label for="date">Date:</label>
                     <input class="date" type="text" name="date[]" />
-                    <label style="float: none" for="time">{% trans "Time" %}:</label>
+                    <label style="float: none" for="time">Time:</label>
                     <input class="time" type="text" name="time[]" value="12:00" />
                     <a id="minus" href="">[-]</a><a id="plus" href="">[+]</a>
                 </div>
             </p>
             <p>
-                <input id="submit" type="submit" value="{% trans "Send invitations" %}" />
+                <input id="submit" type="submit" value="Send invitations" />
             </p>
         </form>
     </div>

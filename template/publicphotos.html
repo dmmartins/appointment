@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block javascript %}
 <script src="/static/js/galleria.js"></script>
 {% endblock %}
@@ -18,7 +16,7 @@ $(document).ready(function() {
 {% block content %}
 <div id="content">
     {% if photos.count %}
-    <h2>{% trans "Public pictures" %}</h2>
+    <h2>Public pictures</h2>
 
     <div class="photos">
         {% for photo in photos %}
@@ -26,7 +24,7 @@ $(document).ready(function() {
         {% endfor %}
     </div>
     {% else %}
-    <h2>{% trans "No public pictures" %}</h2>
+    <h2>No public pictures</h2>
     {% endif %}
 </div>
 {% endblock %}

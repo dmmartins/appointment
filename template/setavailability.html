@@ -1,11 +1,9 @@
-{% load i18n %}
-
 <form id="status-form">
     <input type="hidden" name="key" value="{{ invitee.appointment.key }}" />
     <input type="hidden" name="user" value="{{ invitee.email }}" />
     <input type="hidden" name="date" value="{{ invitee.date|date_format:settings.DATETIME_FORMAT }}" />
-    <input type="radio" id="yes" name="availability" {% ifequal invitee.status "yes" %}checked="checked"{% endifequal %} value="yes" /><label for="yes">{% trans "Yes" %}</label>
-    <input type="radio" id="maybe" name="availability" {% ifequal invitee.status "maybe" %}checked="checked"{% endifequal %} value="maybe" /><label for="maybe">{% trans "Maybe" %}</label>
-    <input type="radio" id="no" name="availability" {% ifequal invitee.status "no" %}checked="checked"{% endifequal %} value="no" /><label for="no">{% trans "No" %}</label>
+    <input type="radio" id="yes" name="availability" {% ifequal invitee.status "yes" %}checked="checked"{% endifequal %} value="yes" /><label for="yes">Yes</label>
+    <input type="radio" id="maybe" name="availability" {% ifequal invitee.status "maybe" %}checked="checked"{% endifequal %} value="maybe" /><label for="maybe">Maybe</label>
+    <input type="radio" id="no" name="availability" {% ifequal invitee.status "no" %}checked="checked"{% endifequal %} value="no" /><label for="no">No</label>
 </form>
 

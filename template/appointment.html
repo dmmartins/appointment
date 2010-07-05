@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% load i18n %}
-
 {% block jquery %}
 <script type="text/javascript">
     var selectedDate = '{{ appointment.date_list.0|date_format:settings.DATETIME_FORMAT }}';
@@ -52,14 +50,14 @@
 
 {% block content %}
 <h2>{{ appointment.description }}</h2>
-<p>{% trans "By" %} <a href="/profile?user={{ appointment.email }}">{{ appointment.email }}</a></p>
+<p>By <a href="/profile?user={{ appointment.email }}">{{ appointment.email }}</a></p>
 <div id="appointment">
     <table>
         <thead>
             <tr>
-                <th>{% trans "Proposed dates" %}</th>
-                <th>{% trans "Availability" %}</th>
-                <th>{% trans "Participants" %}</th>
+                <th>Proposed dates</th>
+                <th>Availability</th>
+                <th>Participants</th>
             </tr>
         </thead>
         <tbody>
