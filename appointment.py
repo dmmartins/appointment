@@ -131,7 +131,9 @@ class BaseRequestHandler(webapp.RequestHandler):
 
 
 class HomeHandler(BaseRequestHandler):
+    ''' The / handler.'''
     def get(self):
+        ''' Checks if user is logged and redirects to user's profile.'''
         if self.current_user:
             self.redirect('/profile')
         else:
@@ -139,8 +141,10 @@ class HomeHandler(BaseRequestHandler):
 
 
 class NewAppointmentHandler(BaseRequestHandler):
+    ''' Create a new appointment.'''
     @login_required
     def get(self):
+        ''' Appointment edit form.'''
         key = self.request.get('key')
         if key:
             appointment = Appointment.get(key)
@@ -151,6 +155,8 @@ class NewAppointmentHandler(BaseRequestHandler):
 
     @login_required
     def post(self):
+        ''' Creates new appointment, invites and sends invitation e-mails.'''
+        # Get request variables
         description = self.request.get('description')
         invitees = self.request.get('invitees')
         invitee_list = [db.Email(i.strip()) for i in invitees.split(',')]
@@ -223,6 +229,7 @@ class NewAppointmentHandler(BaseRequestHandler):
 
 class PublicImagesHandler(BaseRequestHandler):
     def get(self):
+        '''Returns a photo galery with all public photos.'''
         photos = Photo.all().filter('public =', True)
         self.generate('publicphotos.html', {'photos': photos})
 
@@ -282,6 +289,7 @@ class AvailabilityHandler(BaseRequestHandler):
 
 class AppointmentRemoveHandler(BaseRequestHandler):
     def post(self):
+        '''Removes an appointment.'''
         key = self.request.get('key');
         appointment = Appointment.get(key)
         if not appointment:

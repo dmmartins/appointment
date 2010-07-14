@@ -1,0 +1,489 @@
+<h1>Appointment site.</h1>
+
+<h2>Models</h2>
+
+<h3>Appointment()</h3>
+
+<p>Appointment is the model for an appointment. As attributes it has:</p>
+
+<ul>
+<li>description: A description about the appointment (eg. where, when, why?, etc).</li>
+<li>invitee_list: The invitee list. It contains the e-mail address of all invitees.</li>
+<li>date_list: A list of proposed dates for the appointment.</li>
+<li>name: Name of person who is calling people for the appointment.</li>
+<li>email: E-mail of person who is calling people for the appointment.</li>
+</ul>
+
+<h3>Invite()</h3>
+
+<p>Invitee is an invite model. When an appointment is created, an invite is created for each invitee on each date, including the appointment creator.</p>
+
+<p>Eg. On appointment created by test@example.com with dates 2010-06-28, 2010-06-29, inviting test2@example.com and test3@example.com wil create six Invite instaqnces: one fot test2@example.com on 2010-06-28, one for test2@example.com on 2010-06-29, one for test3@example.com on 2010-06-28 and so on.</p>
+
+<p>It has the folowing attributes:</p>
+
+<ul>
+<li>email: Invitee's e-mail address.</li>
+<li>date: Proposed date for the appointment.</li>
+<li>status: Invitee availability for the appointment (yes, maybe, no).</li>
+<li>appointment: The invite appointment.</li>
+</ul>
+
+<h3>Photo()</h3>
+
+<p>Photo is a storage model for a picture. Its attributes are:</p>
+
+<ul>
+<li>user: The picture owner</li>
+<li>blb_info: The picture itself</li>
+<li>comment: A comment about the picture</li>
+<li>public: Allow other people to see the picture</li>
+<li>rotate: The picture rotation to display (0, 90, 180, 270)</li>
+</ul>
+
+<h3>File()</h3>
+
+<p>File is a storage model for all files that are not pictures. Its attributes are:</p>
+
+<ul>
+<li>user: The file owner</li>
+<li>blob_info: The file istself</li>
+<li>comment: A comment about the file</li>
+<li>public: Allow other people to download the file</li>
+</ul>
+
+<h2>Request Handlers</h2>
+
+<p>When you call an url, eg. http://host.com/abc, the '/profile' part of url is mapped to a http request handler. In this application, except for file upload/download, all http request handlres inherites from BaseRequestHandler, a basic http request handler, that provides a template generator with some context variables, such current user, request parameters, etc.
+For every request handler that inherites from BaseRequestHandler is implemented the methods get(), for GET http requests and post() for POST http requests.</p>
+
+<h3>BaseRequestHandler</h3>
+
+<p>A base handler that provides a template render method, passing some values as template values.</p>
+
+<pre><code>class BaseRequestHandler(webapp.RequestHandler):
+    ''' Suplies a common template generation method. '''
+    def generate(self, template_name, template_values={}):
+        values = {
+            'request': self.request,
+            'current_user': self.current_user,
+            'login_url': users.create_login_url(self.request.uri),
+            'logout_url': users.create_logout_url('http://%s/' % self.request.host),
+            'settings': settings,
+        }
+
+        values.update(template_values)
+        directory = os.path.dirname(__file__)
+        path = os.path.join(directory, 'template', template_name)
+        self.response.out.write(template.render(path, values, debug=_DEBUG))
+
+    def error(self, code):
+        super(BaseRequestHandler, self).error(code)
+        self.response.out.write(self.response.http_status_message(code))
+
+    @property
+    def current_user(self):
+        user = users.get_current_user()
+        if user:
+            user.administrator = users.is_current_user_admin()
+        return user
+</code></pre>
+
+<h3>HomeHandler()</h3>
+
+<p>The root ('/') handler. Just check if user is logged. If not show a message with a link to loginpage, otherwise redirects to user's profile.</p>
+
+<pre><code>class HomeHandler(BaseRequestHandler):
+    ''' The / handler.'''
+    def get(self):
+        ''' Checks if user is logged and redirects to user's profile.'''
+        if self.current_user:
+            self.redirect('/profile')
+        else:
+            self.generate('index.html')
+</code></pre>
+
+<h3>NewAppointmentHandler()</h3>
+
+<p>Handler to create a new appointment. The GET method returns an appointment edit form. The Post method creates the appointments and invites. It also sends e-mail invitations.</p>
+
+<pre><code>class NewAppointmentHandler(BaseRequestHandler):
+    ''' Create a new appointment.'''
+    @login_required
+    def get(self):
+        ''' Appointment edit form.'''
+        key = self.request.get('key')
+        if key:
+            appointment = Appointment.get(key)
+        else:
+            appointment = None
+
+        self.generate('new.html', {'appointment': appointment})
+
+    @login_required
+    def post(self):
+        ''' Creates new appointment, invites and sends invitation e-mails.'''
+        # Get request variables
+        description = self.request.get('description')
+        invitees = self.request.get('invitees')
+        invitee_list = [db.Email(i.strip()) for i in invitees.split(',')]
+        dates = self.request.get_all('date[]')
+        times = self.request.get_all('time[]')
+        datetimes = map(lambda d, t: '%s %s' % (d, t), dates, times)
+        date_list = [datetime.datetime.strptime(d, settings.DATETIME_FORMAT) for d in datetimes]
+        name = self.current_user.nickname()
+        email = self.current_user.email()
+
+        # Save appointment
+        appointment = Appointment(
+            description=description,
+            invitee_list=invitee_list,
+            date_list=date_list,
+            name=name,
+            email=email,
+            )
+        appointment.put()
+
+        # Save invitees
+        for date in date_list:
+            owner = Invite(
+                email=appointment.email,
+                date=date,
+                appointment=appointment,
+                status='yes'
+                )
+            owner.put()
+
+            for invitee in invitee_list:
+                i = Invite(
+                    email=invitee,
+                    date=date,
+                    appointment=appointment,
+                    status='maybe'
+                    )
+                i.put()
+
+        # Send the overview e-mail
+        msg = mail.EmailMessage()
+        msg.subject = 'Overview: %s' % appointment.description
+        msg.sender = settings.app_config['email']
+        msg.to = appointment.email
+        directory = os.path.dirname(__file__)
+        path = os.path.join(directory, 'template', 'overview.html')
+        msg.html = template.render(path, {
+            'appointment': appointment,
+            'settings': settings,
+            'request': self.request})
+        msg.send()
+
+        # Send an email invitation for each invitee
+        for invitee in appointment.invitee_list:
+            msg = mail.EmailMessage()
+            msg.subject = 'Invitation: %s' % appointment.description
+            msg.sender = settings.app_config['email']
+            msg.to = invitee
+            directory = os.path.dirname(__file__)
+            path = os.path.join(directory, 'template', 'invitation.html')
+            msg.html = template.render(path, {
+                'appointment': appointment,
+                'invitee': invitee,
+                'settings': settings,
+                'request': self.request})
+            msg.send()
+
+        self.redirect('/appointment?key=%s&amp;user=%s' % (appointment.key(), appointment.email))
+</code></pre>
+
+<h3>PublicImagesHandler()</h3>
+
+<p>Display a photo galery of all photo marked as public.</p>
+
+<pre><code>class AppointmentHandler(BaseRequestHandler):
+    def get(self):
+        key = self.request.get('key')
+        user = self.request.get('user')
+        appointment = Appointment.get(key)
+        if not appointment:
+            return self.error(404)
+        invitees = Invite.all().filter('appointment =', appointment)
+        self.generate('appointment.html', {'appointment': appointment, 'invitees': invitees, 'user': user})
+</code></pre>
+
+<h3>AvailabilityHandler()</h3>
+
+<p>Handles the invitee availability for an appointment. The GET method display the availability. The POST method changes the availability. Appointment key, user and date are passed as request parameters.</p>
+
+<pre><code>class AvailabilityHandler(BaseRequestHandler):
+    def get(self):
+        ''' Get user availability. '''
+        key = self.request.get('key')
+        email = self.request.get('email')
+        user = self.request.get('user')
+        d = self.request.get('date')
+        date = datetime.datetime.strptime(d, settings.DATETIME_FORMAT)
+        appointment = Appointment.get(key)
+        if not appointment:
+            return self.error(404)
+        invitee = Invite.all().filter('email =', email).filter('date =', date).filter('appointment =', appointment).get()
+        if not invitee:
+            return self.error(404)
+        if user == invitee.email:
+            self.generate('setavailability.html', {'invitee': invitee})
+        else:
+            self.generate('availability.html', {'invitee': invitee})
+
+    def post(self):
+        ''' Change user availability. '''
+        key = self.request.get('key')
+        user = self.request.get('user')
+        d = self.request.get('date')
+        date = datetime.datetime.strptime(d, settings.DATETIME_FORMAT)
+        availability = self.request.get('availability')
+        appointment = Appointment.get(key)
+        if not appointment:
+            return self.error(404)
+        invitee = Invite.all().filter('email =', user).filter('date =', date).filter('appointment =', appointment).get()
+        if not invitee:
+            return self.error(404)
+        invitee.status = availability
+        invitee.put()
+</code></pre>
+
+<h3>AppointmentRemoveHandler()</h3>
+
+<p>Removes an appointment. Appointment key is passed as request parameter.</p>
+
+<pre><code>class AppointmentRemoveHandler(BaseRequestHandler):
+    def post(self):
+        '''Removes an appointment.'''
+        key = self.request.get('key');
+        appointment = Appointment.get(key)
+        if not appointment:
+            return self.error(404)
+
+        if appointment.email == self.current_user.email:
+            return self.error(405)
+
+        invitees = Invite.all().filter('appointment =', appointment)
+        for invitee in invitees:
+            invitee.delete()
+
+        appointment.delete()
+</code></pre>
+
+<h3>ProfileHandler()</h3>
+
+<p>Display the user profile. User e-mail is passed as request parameter.</p>
+
+<pre><code>class ProfileHandler(BaseRequestHandler):
+    ''' Profile. '''
+    def get(self):
+        email = self.request.get('user')
+        if not email:
+            user = self.current_user
+        else:
+            user = users.User(email)
+
+        invitations = Appointment.all().filter('invitee_list =', user.email())
+        appointments = Appointment.all().filter('email =', user.email())
+        photos = Photo.all().filter('user =', user)
+        if not user == self.current_user:
+            photos.filter('public =', True)
+        files = File.all().filter('user =', user)
+        if not user == self.current_user:
+            files.filter('public =', True)
+
+        upload_url = blobstore.create_upload_url('/upload')
+        self.generate('profile.html', {'photos': photos, 'files': files, 'appointments': appointments, 'invitations': invitations, 'upload_url': upload_url, 'user': user})
+</code></pre>
+
+<h3>PhotoHandler()</h3>
+
+<p>Display a photo on user profile. Photo key is passed in url, like '/photo/{{ photo_key }}'.</p>
+
+<pre><code>class PhotoHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        self.generate('photo.html', {'photo': photo})
+</code></pre>
+
+<h3>PhotosHandler()</h3>
+
+<p>Returns the image file. If its width is larger than 500 pixels, resize it to a 500 pixel width.
+Photo key is passed in url, like '/photos/{{ photo_key }}'. Also handles photo rotation.</p>
+
+<pre><code>class PhotosHandler(BaseRequestHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        blob_key = str(photo.blob_info.key())
+        img = images.Image(blob_key=blob_key)
+        img.im_feeling_lucky()
+        img.rotate(photo.rotate)
+        thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        if img.width &gt; 500:
+            img.resize(width=500)
+            thumbnail = img.execute_transforms(output_encoding=images.JPEG)
+        self.response.headers['Content-Type'] = 'image/jpg'
+        self.response.out.write(thumbnail)
+</code></pre>
+
+<h3>FullPhotoHandler()</h3>
+
+<p>Returns the image file with original file size and orientation. Photo key is passed in url, like '/photos/{{ photo_key }}/full'</p>
+
+<pre><code>class FullPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, photo_key):
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        self.send_blob(photo.blob_info)
+</code></pre>
+
+<h3>PhotoSearchHandler()</h3>
+
+<p>Search for a string in photo comments of an user. Query string and user's e-mail is passed as request parameters.</p>
+
+<pre><code>class PhotoSearchHandler(BaseRequestHandler):
+    def get(self):
+        query = self.request.get('q')
+        email = self.request.get('user')
+        user = users.User(urllib.unquote(email))
+        photos = (p for p in Photo.all().filter('user =', user) if query in p.comment)
+        self.generate('searchresult.html', {'photos': photos, 'query': query})
+</code></pre>
+
+<h3>PhotoRotateHandler()</h3>
+
+<p>Modify image orientation. Photo key and rotation are passed as request parameters. Photo rotation must be 0, 90, 180 or 270.</p>
+
+<pre><code>class PhotoRotateHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        photo_key = self.request.get('photo_key')
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        if photo.user != self.current_user:
+            return self.error(405)
+
+        angle = int(self.request.get('angle', 0))
+        photo.rotate += angle
+        photo.put()
+</code></pre>
+
+<h3>PhotoShareHandler()</h3>
+
+<p>Modify photo access. Photo is passed as 'public' request parameter.</p>
+
+<pre><code>class PhotoShareHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        photo_key = self.request.get('photo_key')
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        if photo.user != self.current_user:
+            return self.error(405)
+
+        public = bool(self.request.get('public'))
+        photo.public = public
+        photo.put()
+</code></pre>
+
+<h3>PhotoRemoveHandler()</h3>
+
+<p>Remvoes a photo. Photo key is passed as request parameter</p>
+
+<pre><code>class PhotoRemoveHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        photo_key = self.request.get('photo_key')
+        photo = Photo.get(photo_key)
+        if not photo:
+            return self.error(404)
+
+        if photo.user != self.current_user:
+            return self.error(405)
+
+        photo.blob_info.delete()
+        photo.delete()
+</code></pre>
+
+<h3>FilesHandler()</h3>
+
+<p>Returns a file to download. File key and file name are passed as request parameters, like '/files/{{ file<em>key }}/{{ file</em>name }}'.</p>
+
+<pre><code>class FilesHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, file_key, file_name):
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        self.send_blob(file_.blob_info)
+</code></pre>
+
+<h3>FileRemoveHandler()</h3>
+
+<p>Removes a file. File key is passed as request parameter.</p>
+
+<pre><code>class FileRemoveHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        file_key = self.request.get('file_key')
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        if file_.user != self.current_user:
+            return self.error(405)
+
+        file_.blob_info.delete()
+        file_.delete()
+</code></pre>
+
+<h3>FileShareHandler()</h3>
+
+<p>Modify file access. File access is passed as 'public' request parameter.</p>
+
+<pre><code>class FileShareHandler(BaseRequestHandler):
+    @login_required
+    def post(self):
+        file_key = self.request.get('file_key')
+        file_ = File.get(file_key)
+        if not file_:
+            return self.error(404)
+
+        if file_.user != self.current_user:
+            return self.error(405)
+
+        file_.public = bool(self.request.get('public'))
+        file_.put()
+</code></pre>
+
+<h3>PublicFilesHandler()</h3>
+
+<p>Display a list of all files marked as public.</p>
+
+<pre><code>class PublicFilesHandler(BaseRequestHandler):
+    def get(self):
+        files = File.all().filter('public =', True)
+        self.generate('publicfiles.html', {'files': files})
+</code></pre>
+
+<h3>Http404()</h3>
+
+<p>Returned when a url is not found.</p>
+
+<pre><code>class Http404(BaseRequestHandler):
+    def get(self):
+        return self.error(404)
+</code></pre>
