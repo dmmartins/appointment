@@ -21,6 +21,12 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 from django.utils import simplejson
 
+# Use Django translation
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+from django.conf import settings as django_settings
+django_settings._target = None
+from django.utils import translation
+
 # Project imports
 import settings
 
@@ -105,6 +111,9 @@ def admin_required(method):
 class BaseRequestHandler(webapp.RequestHandler):
     ''' Suplies a common template generation method. '''
     def generate(self, template_name, template_values={}):
+        lang = self.request.get('lang')
+        translation.activate(lang)
+
         values = {
             'request': self.request,
             'current_user': self.current_user,

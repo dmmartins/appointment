@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block jquery %}
 <script type="text/javascript">
 $(document).ready(function() {
@@ -20,7 +22,7 @@ $(document).ready(function() {
         $.post('/photos/share', $.extend($(this).serialize(), {photo_key: '{{ photo.key }}'}));
     });
     $('#remove').click(function() {
-        if (confirm('Do you want to remove this photo?')) {
+        if (confirm('{% trans "Do you want to remove this photo" %}?')) {
             $.post('/photos/remove', {photo_key: '{{ photo.key }}'});
             $('#content').html('<p>Photo removed. <a href="/profile">Back to {{ photo.user }} profile</a></p>');
         }
@@ -38,10 +40,10 @@ $(document).ready(function() {
     <p>{{ photo.comment }}</p>
     {% ifequal photo.user current_user %}
     <div id="photo-tools">
-    <button id="rotate-left">Rotate left</button>
-    <button id="rotate-right">Rotate right</button>
-    <input type="checkbox" {% if photo.public %}checked="true"{% endif %} name="public" id="public" value="true"><label for="public">Public</label>
-    <button id="remove">Remove</button>
+    <button id="rotate-left">{% trans "Rotate left" %}</button>
+    <button id="rotate-right">{% trans "Rotate right" %}</button>
+    <input type="checkbox" {% if photo.public %}checked="true"{% endif %} name="public" id="public" value="true"><label for="public">{% trans "Public" %}</label>
+    <button id="remove">{%trans "Remove" %}</button>
     </div>
     {% endifequal %}
 </div>

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block javascript %}
 <script src="/static/js/galleria.js"></script>
 {% endblock %}
@@ -14,7 +16,7 @@ $(document).ready(function() {
     $('.remove').click(function() {
         var key = $(this).attr('name');
         var tr = $(this).parents().parents().first();
-        if (confirm('Remove this appointment?')) {
+        if (confirm('{% trans "Remove this appointment" %}?')) {
             $.post('/appointment/remove', {key: key}, function() {
                 tr.replaceWith('');
             });
@@ -23,7 +25,7 @@ $(document).ready(function() {
     $('.remove-file').click(function() {
         var key = $(this).attr('id');
         var tr = $(this).parents().parents().first();
-        if (confirm('Remove this file?')) {
+        if (confirm('{% trans "Remove this file" %}?')) {
             $.post('/files/remove', {file_key: key}, function() {
                 tr.replaceWith('');
             });
@@ -44,8 +46,8 @@ $(document).ready(function() {
         <h2>{{ user }} appointments.</h2>
         <table>
             <thead>
-                <th>Appointment</th>
-                <th>Dates</th>
+                <th>{% trans "Appointment" %}</th>
+                <th>{% trans "Dates" %}</th>
                 <th></th>
             </thead>
             <tbody>
@@ -54,7 +56,7 @@ $(document).ready(function() {
                     <td><a href="/appointment?key={{ appointment.key }}&user={{ current_user.email }}">{{ appointment.description }}</a></td>
                     <td>{{ appointment.dates }}</td>
                     {% ifequal user current_user %}
-                    <td><button class="remove" name="{{ appointment.key }}">Remove</button></td>
+                    <td><button class="remove" name="{{ appointment.key }}">{% trans 'Remove' %}</button></td>
                     {% endifequal %}
                 </tr>
             {% endfor %}
@@ -67,7 +69,7 @@ $(document).ready(function() {
             </tbody>
         </table>
         {% else %}
-        <p>No appointments.</p>
+        <p>{% trans 'No appointments' %}.</p>
         {% endif %}
     </div>
 
@@ -76,10 +78,10 @@ $(document).ready(function() {
         <h2>{{ user }} files.</h2>
         <table>
             <thead>
-                <th>Name</th>
-                <th>Comment</th>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Comment" %}</th>
                 {% ifequal user current_user %}
-                <th>Public
+                <th>{% trans 'Public' %}
                 {% endifequal %}
             </thead>
             <tbody>
@@ -89,7 +91,7 @@ $(document).ready(function() {
                     <td>{{ file.comment }}</td>
                     {% ifequal user current_user %}
                     <td><input type="checkbox" {% if file.public %}checked="true"{% endif %} class="share-file" id="{{ file.key }}" name="public" value="true" /></td>
-                    <td><button class="remove-file" id="{{ file.key }}">Remove</button></td>
+                    <td><button class="remove-file" id="{{ file.key }}">{% trans 'Remove' %}</button></td>
                     {% endifequal %}
                 </tr>
                 {% endfor %}
@@ -105,9 +107,9 @@ $(document).ready(function() {
     <form id="photo-search" action="/photo/search" method="get">
         <input type="hidden" name="user" value="{{ user.email }}" />
         <p>
-            <label for="query">Search for a photo</label>
+            <label for="query">{% trans 'Search for a photo' %}</label>
             <input type="text" name="q" />
-            <input type="submit" value="Search" />
+            <input type="submit" value="{% trans 'Search' %}" />
         </p>
     </form>
 
@@ -119,7 +121,7 @@ $(document).ready(function() {
     {% endif %}
     {% ifequal user current_user %}
     <div id="file-upload">
-        <h2>Upload a file.</h2>
+        <h2>{% trans "Upload a file" %}.</h2>
         {% if errors %}
         <ul id="error">
             {% for error in errors %}
@@ -129,10 +131,10 @@ $(document).ready(function() {
         {% endif %}
 
         <form class="file-form" enctype="multipart/form-data" action="{{ upload_url }}" method="post">
-            <p><label for="file">File</label><input type="file" name="file" /></p>
-            <p><label for="comment">Comment</label><input type="text" name="comment" /></p>
-            <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">Make this file public</label></p>
-            <p><input type="submit" id="submit" value="Send file" /></p>
+            <p><label for="file">{% trans "File" %}</label><input type="file" name="file" /></p>
+            <p><label for="comment">{% trans "Comment" %}</label><input type="text" name="comment" /></p>
+            <p><input style="width:15px" type="checkbox" checked="true" name="public" value="true" /><label style="float: none" for="public">{% trans "Make this file public" %}</label></p>
+            <p><input type="submit" id="submit" value="{% trans 'Send file' %}" /></p>
         </form>
        
     </div>
