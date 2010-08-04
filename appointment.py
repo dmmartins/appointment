@@ -38,7 +38,21 @@ _DEBUG = True
 
 
 class Appointment(db.Model):
-    ''' Appointment. '''
+    '''
+    Provides appointment storage. To create an appointment use:
+
+    >>> invitees = [u'test@example.com', u'test2@example.com']
+    >>> dates = [u'2012-12-21 12:00', u'2012-12-22 12:00']
+    >>> a = Appointment(\
+    description=u'Party in my house',\
+    invitee_list=[db.Email(i) for i in invitees],\
+    date_list=[datetime.datetime.strptime(d, u'%Y-%m-%d %H:%M') for d in dates],\
+    name=u'John',\
+    email=u'john@example.com')
+    >>> a
+    Appointment(description=u'Party in my house', invitee_list=[u'test@example.com', u'test2@example.com'], date_list=[datetime.datetime(2012, 12, 21, 12, 0), datetime.datetime(2012, 12, 22, 12, 0)], name=u'John', email=u'john@example.com')
+    >>> key = a.put()
+    '''
     description = db.StringProperty(required=True)
     invitee_list = db.ListProperty(db.Email, required=True)
     date_list = db.ListProperty(datetime.datetime)
@@ -49,13 +63,40 @@ class Appointment(db.Model):
     def dates(self):
         return ', '.join([d.strftime(settings.DATETIME_FORMAT) for d in self.date_list])
 
+    def __repr__(self):
+        return 'Appointment(description=%r, invitee_list=%r, date_list=%r, name=%r, email=%r)' % (self.description, self.invitee_list, self.date_list, self.name, self.email)
+
 
 class Invite(db.Model):
-    ''' Contact invited to an appointment. '''
+    '''
+    Contact invited to an appointment. To create an invite, first create an appointment:
+
+    >>> invitees = [u'test@example.com', u'test2@example.com']
+    >>> dates = [u'2012-12-21 12:00', u'2012-12-22 12:00']
+    >>> a = Appointment(\
+    description=u'Party in my house',\
+    invitee_list=[db.Email(i) for i in invitees],\
+    date_list=[datetime.datetime.strptime(d, u'%Y-%m-%d %H:%M') for d in dates],\
+    name=u'John',\
+    email=u'john@example.com')
+    >>> a
+    Appointment(description=u'Party in my house', invitee_list=[u'test@example.com', u'test2@example.com'], date_list=[datetime.datetime(2012, 12, 21, 12, 0), datetime.datetime(2012, 12, 22, 12, 0)], name=u'John', email=u'john@example.com')
+    >>> a_key = a.put()
+
+    Now create the invite
+
+    >>> i = Invite(email=a.invitee_list[0] , date=a.date_list[0], status=u'yes', appointment=a)
+    >>> i # doctest: +ELLIPSIS
+    Invite(email=u'test@example.com', date=datetime.datetime(2012, 12, 21, 12, 0), status=u'yes', appointment=Appointment(...))
+    >>> i_key = i.put()
+    '''
     email = db.EmailProperty(required=True)
     date = db.DateTimeProperty(required=True)
     status = db.StringProperty(required=True)
     appointment = db.ReferenceProperty(Appointment)
+
+    def __repr__(self):
+        return 'Invite(email=%r, date=%r, status=%r, appointment=%r)' % (self.email, self.date, self.status, self.appointment)
 
 
 class Photo(db.Model):
